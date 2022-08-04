@@ -1,0 +1,31 @@
+name: "Helm Charts Updater"
+author: "Vadim Gedz"
+description: "A tool that will update helm charts in a given repository"
+branding:
+  icon: "arrow-up"
+  color: "purple"
+inputs:
+  github_token:
+    description: "A token to commit to github repository"
+    required: true
+  gh_user:
+    description: "The owner of helm charts git repository"
+    required: true
+  gh_repo:
+    description: "The name of git repository with helm charts"
+    required: true
+  chart_name:
+    description: "The name of the helm chart to update"
+    required: true
+  app_version:
+    description: "The new value for appVersion"
+    required: true
+runs:
+  using: "docker"
+  image: "Dockerfile"
+  args:
+    - ${{ inputs.github_token }}
+    - ${{ inputs.gh_user }}
+    - ${{ inputs.gh_repo }}
+    - ${{ inputs.chart_name }}
+    - ${{ inputs.app_version }}

@@ -1,0 +1,4 @@
+.idea
+**/charts
+**/__pycache__
+.envrc
