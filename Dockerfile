@@ -29,7 +29,7 @@ FROM python:${PYTHON_VERSION}
 
 WORKDIR /app
 
-COPY --chown=app:app --from=builder /src/dist/*.tar.gz /app
+COPY --from=builder /src/dist/*.tar.gz /app
 
 RUN pip install *.tar.gz && rm -f *.tar.gz
 

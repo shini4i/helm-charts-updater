@@ -31,7 +31,7 @@ To be used in tandem with the [chart-releaser-action](https://github.com/helm/ch
     sudo apt install ./helm-docs_1.11.0_Linux_x86_64.deb
 
 - name: Update helm chart
-  uses: shini4i/helm-charts-updater@v1
+  uses: shini4i/helm-charts-updater@v0.1.1
   with:
     github_token: ${{ secrets.GITHUB_TOKEN }}
     gh_user: shini4i
