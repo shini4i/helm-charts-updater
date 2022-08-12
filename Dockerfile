@@ -31,6 +31,12 @@ WORKDIR /app
 
 COPY --from=builder /src/dist/*.tar.gz /app
 
+RUN apt update && apt install -y git wget && apt clean
+
+RUN wget https://github.com/norwoodj/helm-docs/releases/download/v1.11.0/helm-docs_1.11.0_Linux_x86_64.deb \
+ && apt install ./helm-docs_1.11.0_Linux_x86_64.deb \
+ && rm -f ./helm-docs_1.11.0_Linux_x86_64.deb
+
 RUN pip install *.tar.gz && rm -f *.tar.gz
 
-CMD ["helm-charts-updater"]
+ENTRYPOINT ["python", "/usr/local/bin/helm-charts-updater"]

@@ -20,20 +20,10 @@ To be used in tandem with the [chart-releaser-action](https://github.com/helm/ch
 ## Example Workflow
 
 ```bash
-- name: Install Helm
-  uses: azure/setup-helm@v1
-  with:
-    version: v3.8.1
-
-- name: Install helm-docs
-  run: |
-    wget https://github.com/norwoodj/helm-docs/releases/download/v1.11.0/helm-docs_1.11.0_Linux_x86_64.deb
-    sudo apt install ./helm-docs_1.11.0_Linux_x86_64.deb
-
 - name: Update helm chart
-  uses: shini4i/helm-charts-updater@v0.1.1
+  uses: shini4i/helm-charts-updater@v0.1.2
   with:
-    github_token: ${{ secrets.GITHUB_TOKEN }}
+    github_token: ${{ secrets.GH_TOKEN }}
     gh_user: shini4i
     gh_repo: charts
     chart_name: my-chart
