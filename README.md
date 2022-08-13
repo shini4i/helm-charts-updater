@@ -26,7 +26,7 @@ It might be a good tandem for the [chart-releaser-action](https://github.com/hel
 
 ```bash
 - name: Update helm chart
-  uses: shini4i/helm-charts-updater@v0.2.0
+  uses: shini4i/helm-charts-updater@v0.2.1
   with:
     github_token: ${{ secrets.GH_TOKEN }}
     gh_user: shini4i
