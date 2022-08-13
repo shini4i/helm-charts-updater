@@ -16,9 +16,9 @@ A tool that will update helm charts in a given repository
 The use case is relatively niche. The idea is that there are a lot of helm charts in a single git
 repository, and it is required to bump both chart version and appVersion from a pipeline in a different repository.
 
-That's all that this automation will do.
-
 So it is required that the selected helm chart uses appVersion as an image tag.
+
+Additionally, it can generate helm readme and generate table of the existing charts in the main README.md file.
 
 It might be a good tandem for the [chart-releaser-action](https://github.com/helm/chart-releaser-action).
 
@@ -26,7 +26,7 @@ It might be a good tandem for the [chart-releaser-action](https://github.com/hel
 
 ```bash
 - name: Update helm chart
-  uses: shini4i/helm-charts-updater@v0.1.2
+  uses: shini4i/helm-charts-updater@v0.2.0
   with:
     github_token: ${{ secrets.GH_TOKEN }}
     gh_user: shini4i
