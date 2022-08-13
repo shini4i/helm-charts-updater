@@ -8,6 +8,7 @@ authors = ["Vadim Gedz <vadims@linux-tech.io>"]
 python = "^3.10"
 PyYAML = "^6.0"
 semver = "^2.13.0"
+GitPython = "^3.1.27"
 
 [tool.poetry.dev-dependencies]
 

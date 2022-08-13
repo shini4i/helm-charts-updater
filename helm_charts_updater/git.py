@@ -1,5 +1,7 @@
 import os
 
+from git import Repo
+
 
 class GitRepository:
     def __init__(self):
@@ -14,19 +16,29 @@ class GitRepository:
         self.commit_author = "github-actions[bot]"
         self.committer_email = "github-actions[bot]@users.noreply.github.com"
 
-    def clone(self):
+        self._clone()
+        self.local_repo = Repo(self.repo_path)
+
+    def _clone(self):
         if not os.path.exists(self.repo_path):
             print(f"===> Cloning helm charts repository to {self.repo_path}...")
-            os.system(f"git clone {self.repo} {self.repo_path}")
+            Repo.clone_from(self.repo, self.repo_path)
 
-    def push_changes(self, chart_version, app_name: str, version: str, old_version: str):
+    def _commit_changes(self, commit_message):
+        self.local_repo.git.add(A=True)
+        self.local_repo.git.config("user.name", self.commit_author)
+        self.local_repo.git.config("user.email", self.committer_email)
+        self.local_repo.index.commit(commit_message)
+
+    def push_changes(
+        self, chart_version, app_name: str, version: str, old_version: str
+    ):
         print("===> Committing changes...")
-        commit_message = f"Bump {app_name} chart to {chart_version}\n" \
-                         f"appVersion {old_version} → {version}"
+        commit_message = (
+            f"Bump {app_name} chart to {chart_version}\n"
+            f"appVersion {old_version} → {version}"
+        )
 
-        os.chdir(self.repo_path)
-        os.system(f"git config user.name {self.commit_author}")
-        os.system(f"git config user.email {self.committer_email}")
-        os.system(f"git add -A")
-        os.system(f"git commit -m '{commit_message}'")
-        os.system("git push")
+        self._commit_changes(commit_message)
+        origin = self.local_repo.remote(name="origin")
+        origin.push()
