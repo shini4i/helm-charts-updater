@@ -6,7 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Changed
-- Shell calls were changed to GitPython.
+- Shell calls were changed to GitPython
+- Approach for collecting environment variables
 
 ## [0.1.2] - 2022-08-12
 ### Fixed

@@ -3,12 +3,14 @@ import os
 import semver
 import yaml
 
+from helm_charts_updater import config
+
 
 class HelmChart:
     def __init__(self):
         self.charts_path = "charts"
-        self.chart_name = os.getenv("INPUT_CHART_NAME")
-        self.app_version = os.getenv("INPUT_APP_VERSION")
+        self.chart_name = config.get_chart_name()
+        self.app_version = config.get_app_version()
 
     def parse_charts_yaml(self):
         print(f"===> Parsing {self.chart_name}'s Chart.yaml...")

@@ -2,15 +2,12 @@ import os
 
 from git import Repo
 
+from helm_charts_updater import config
+
 
 class GitRepository:
     def __init__(self):
-
-        github_token = os.environ.get("INPUT_GITHUB_TOKEN")
-        gh_user = os.environ.get("INPUT_GH_USER")
-        gh_repo = os.environ.get("INPUT_GH_REPO")
-
-        self.repo = f"https://{github_token}@github.com/{gh_user}/{gh_repo}.git"
+        self.repo = self._generate_repo_url()
         self.repo_path = "charts"
 
         self.commit_author = "github-actions[bot]"
@@ -18,6 +15,14 @@ class GitRepository:
 
         self._clone()
         self.local_repo = Repo(self.repo_path)
+
+    @staticmethod
+    def _generate_repo_url():
+        gh_token = config.get_github_token()
+        gh_user = config.get_github_user()
+        gh_repo = config.get_github_repo()
+
+        return f"https://{gh_token}@github.com/{gh_user}/{gh_repo}.git"
 
     def _clone(self):
         if not os.path.exists(self.repo_path):
