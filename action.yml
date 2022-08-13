@@ -20,6 +20,9 @@ inputs:
   app_version:
     description: "The new value for appVersion"
     required: true
+  generate_docs:
+    description: "Generate helm docs"
+    required: false
 runs:
   using: "docker"
   image: "Dockerfile"
@@ -29,3 +32,4 @@ runs:
     - ${{ inputs.gh_repo }}
     - ${{ inputs.chart_name }}
     - ${{ inputs.app_version }}
+    - ${{ inputs.generate_docs }}

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Shell calls were changed to GitPython
 - Approach for collecting environment variables
+- Make helm docs generation optional
 
 ## [0.1.2] - 2022-08-12
 ### Fixed

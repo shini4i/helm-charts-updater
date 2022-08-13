@@ -19,3 +19,6 @@ class Config:
 
     def get_app_version(self):
         return self.env("INPUT_APP_VERSION")
+
+    def generate_docs(self):
+        return self.env.bool("INPUT_GENERATE_DOCS", True)

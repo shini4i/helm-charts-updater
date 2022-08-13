@@ -33,3 +33,7 @@ It might be a good tandem for the [chart-releaser-action](https://github.com/hel
     gh_repo: charts
     chart_name: my-chart
     app_version: ${{ github.ref_name }}
+
+    # Optional. Whether helm docs should be generated for the
+    # selected chart. Defaults to true.
+    generate_docs: true

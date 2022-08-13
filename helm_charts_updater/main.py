@@ -1,3 +1,4 @@
+from helm_charts_updater import config
 from helm_charts_updater.git import GitRepository
 from helm_charts_updater.helm import HelmChart
 
@@ -7,7 +8,9 @@ def main():
 
     chart = HelmChart()
     chart_version, old_version = chart.update_chart_version()
-    chart.run_helm_docs()
+
+    if config.generate_docs():
+        chart.run_helm_docs()
 
     repo.push_changes(
         chart_version=chart_version,
