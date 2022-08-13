@@ -23,6 +23,9 @@ inputs:
   generate_docs:
     description: "Generate helm docs"
     required: false
+  update_readme:
+    description: "Create a table with a list of charts"
+    required: false
 runs:
   using: "docker"
   image: "Dockerfile"
@@ -33,3 +36,4 @@ runs:
     - ${{ inputs.chart_name }}
     - ${{ inputs.app_version }}
     - ${{ inputs.generate_docs }}
+    - ${{ inputs.update_readme }}

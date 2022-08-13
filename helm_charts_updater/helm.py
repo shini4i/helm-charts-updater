@@ -12,13 +12,13 @@ class HelmChart:
         self.chart_name = config.get_chart_name()
         self.app_version = config.get_app_version()
 
-    def parse_charts_yaml(self):
+    def parse_charts_yaml(self) -> dict:
         print(f"===> Parsing {self.chart_name}'s Chart.yaml...")
         with open(f"charts/{self.charts_path}/{self.chart_name}/Chart.yaml", "r") as f:
             chart = f.read()
         return yaml.safe_load(chart)
 
-    def update_chart_version(self):
+    def update_chart_version(self) -> tuple:
         chart = self.parse_charts_yaml()
 
         chart_version = semver.bump_patch(chart["version"])

@@ -1,8 +1,11 @@
 import os
+from pathlib import Path
 
+import yaml
 from git import Repo
 
 from helm_charts_updater import config
+from helm_charts_updater.models import Chart
 
 
 class GitRepository:
@@ -47,3 +50,18 @@ class GitRepository:
         self._commit_changes(commit_message)
         origin = self.local_repo.remote(name="origin")
         origin.push()
+
+    @staticmethod
+    def get_charts_list() -> list:
+        print("===> Getting charts list...")
+
+        charts = []
+
+        for chart in Path("charts").rglob("Chart.yaml"):
+            # We want to avoid including dependencies
+            # in the resulting Charts list
+            if len(str(chart).split("/")) <= 4:
+                with open(chart, "r") as file:
+                    charts.append(Chart(**yaml.safe_load(file)))
+
+        return charts

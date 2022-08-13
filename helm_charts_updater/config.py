@@ -22,3 +22,6 @@ class Config:
 
     def generate_docs(self):
         return self.env.bool("INPUT_GENERATE_DOCS", True)
+
+    def update_readme(self):
+        return self.env.bool("INPUT_UPDATE_README", True)
