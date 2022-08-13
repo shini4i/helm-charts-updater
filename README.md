@@ -37,3 +37,11 @@ It might be a good tandem for the [chart-releaser-action](https://github.com/hel
     # Optional. Whether helm docs should be generated for the
     # selected chart. Defaults to true.
     generate_docs: true
+
+    # Optional. Whether the README should be updated with the table of existing charts.
+    # Defaults to true.
+    # NOTE: It is required to have the following comments in the README.md file:
+    # <!-- table_start -->
+    # <!-- table_end -->
+    # The table would be generated between those two comments.
+    update_readme: true

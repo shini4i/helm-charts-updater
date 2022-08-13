@@ -1,6 +1,7 @@
 from helm_charts_updater import config
 from helm_charts_updater.git import GitRepository
 from helm_charts_updater.helm import HelmChart
+from helm_charts_updater.readme import Readme
 
 
 def main():
@@ -11,6 +12,10 @@ def main():
 
     if config.generate_docs():
         chart.run_helm_docs()
+
+    if config.update_readme():
+        readme = Readme()
+        readme.update_readme(charts=repo.get_charts_list())
 
     repo.push_changes(
         chart_version=chart_version,
