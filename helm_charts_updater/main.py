@@ -1,7 +1,7 @@
 from helm_charts_updater import config
 from helm_charts_updater.git import GitRepository
 from helm_charts_updater.helm import HelmChart
-from helm_charts_updater.readme import Readme
+from helm_charts_updater.readme_generator import Readme
 
 
 def main():
