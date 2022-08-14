@@ -10,7 +10,7 @@ class Readme:
         self.table_start_marker = "<!-- table_start -->"
         self.table_end_marker = "<!-- table_end -->"
 
-    def _read_readme(self):
+    def _read_readme(self) -> str:
         with open(self.readme_path, "r") as readme_file:
             return readme_file.read()
 

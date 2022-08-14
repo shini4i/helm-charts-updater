@@ -4,6 +4,7 @@ from typing import Optional
 import semver
 from pydantic import BaseModel
 from pydantic import Field
+from pydantic import ValidationError
 from pydantic import validator
 
 
@@ -42,4 +43,4 @@ class Chart(BaseModel):
         if semver.VersionInfo.isvalid(v):
             return v
         else:
-            raise ValueError(f"{v} is not a valid version")
+            raise ValidationError(f"{v} is not a valid version")
