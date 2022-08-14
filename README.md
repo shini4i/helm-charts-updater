@@ -4,6 +4,7 @@
 
 A tool that will update helm charts in a given repository
 
+![GitHub Workflow Status](https://img.shields.io/github/workflow/status/shini4i/helm-charts-updater/Update%20Main%20Version?style=plastic)
 ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/shini4i/helm-charts-updater?style=plastic)
 ![GitHub](https://img.shields.io/github/license/shini4i/helm-charts-updater?style=plastic)
 
@@ -26,7 +27,7 @@ It might be a good tandem for the [chart-releaser-action](https://github.com/hel
 
 ```bash
 - name: Update helm chart
-  uses: shini4i/helm-charts-updater@v0.2.1
+  uses: shini4i/helm-charts-updater@v1
   with:
     github_token: ${{ secrets.GH_TOKEN }}
     gh_user: shini4i

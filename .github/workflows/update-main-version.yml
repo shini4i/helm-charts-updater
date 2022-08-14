@@ -1,0 +1,24 @@
+name: "Update Main Version"
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Update main git tag
+        run: |
+          git tag -d $MAIN_TAG
+          git push origin --delete $MAIN_TAG
+          git tag $MAIN_TAG
+          git push origin $MAIN_TAG
+        env:
+          MAIN_TAG: v1
