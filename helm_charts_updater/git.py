@@ -20,7 +20,7 @@ class GitRepository:
         self.local_repo = Repo(self.repo_path)
 
     @staticmethod
-    def _generate_repo_url():
+    def _generate_repo_url() -> str:
         gh_token = config.get_github_token()
         gh_user = config.get_github_user()
         gh_repo = config.get_github_repo()
