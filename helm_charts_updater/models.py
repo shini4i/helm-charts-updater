@@ -22,6 +22,13 @@ class Dependency(BaseModel):
     importValues: Optional[List[str]] = Field(alias="import-values")
     alias: Optional[str]
 
+    @validator("version", pre=True)
+    def validate_version(cls, v) -> Optional[str]:
+        if semver.VersionInfo.isvalid(v):
+            return v
+        else:
+            raise ValueError(f"{v} is not a valid version")
+
 
 class Chart(BaseModel):
     apiVersion: Optional[str]
@@ -43,10 +50,3 @@ class Chart(BaseModel):
             return v
         else:
             raise ValueError(f"{v} is not a valid version")
-
-    @validator("dependencies", pre=True)
-    def validate_dependency_version(cls, v) -> Optional[List[Dependency]]:
-        for dependency in v:
-            if not semver.VersionInfo.isvalid(dependency["version"]):
-                raise ValueError(f"{dependency['version']} is not a valid version")
-        return v

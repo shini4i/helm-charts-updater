@@ -1,3 +1,5 @@
+import logging
+
 from prettytable import MARKDOWN
 from prettytable import PrettyTable
 
@@ -36,7 +38,7 @@ class Readme:
         return table
 
     def _replace_table(self, table: PrettyTable):
-        print("===> Replacing table...")
+        logging.info("Replacing table...")
 
         table_start = (
             self.readme_content.find(self.table_start_marker)
@@ -59,6 +61,6 @@ class Readme:
 
         self._replace_table(table)
 
-        print("===> Writing new readme...")
+        logging.info("Writing new readme...")
         with open(self.readme_path, "w") as readme_file:
             readme_file.write(self.readme_content)
