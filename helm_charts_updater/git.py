@@ -1,8 +1,10 @@
+import logging
 import os
 from pathlib import Path
 
 import yaml
 from git import Repo
+from pydantic import ValidationError
 
 from helm_charts_updater import config
 from helm_charts_updater.models import Chart
@@ -29,7 +31,7 @@ class GitRepository:
 
     def _clone(self):
         if not os.path.exists(self.repo_path):
-            print(f"===> Cloning helm charts repository to {self.repo_path}...")
+            logging.info(f"Cloning helm charts repository to {self.repo_path}...")
             Repo.clone_from(self.repo, self.repo_path)
 
     def _commit_changes(self, commit_message):
@@ -41,7 +43,7 @@ class GitRepository:
     def push_changes(
         self, chart_version, app_name: str, version: str, old_version: str
     ):
-        print("===> Committing changes...")
+        logging.info("Committing changes...")
         commit_message = (
             f"Bump {app_name} chart to {chart_version}\n"
             f"appVersion {old_version} → {version}"
@@ -53,7 +55,7 @@ class GitRepository:
 
     @staticmethod
     def get_charts_list() -> list:
-        print("===> Getting charts list...")
+        logging.info("Getting charts list...")
 
         charts = []
 
@@ -62,6 +64,10 @@ class GitRepository:
             # in the resulting Charts list
             if len(str(chart).split("/")) <= 4:
                 with open(chart, "r") as file:
-                    charts.append(Chart(**yaml.safe_load(file)))
+                    try:
+                        charts.append(Chart(**yaml.safe_load(file)))
+                    except ValidationError as err:
+                        logging.error(err)
+                        exit(1)
 
         return charts
