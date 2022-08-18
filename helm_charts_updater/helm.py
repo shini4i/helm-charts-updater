@@ -1,5 +1,7 @@
 import logging
-import os
+from subprocess import DEVNULL
+from subprocess import STDOUT
+from subprocess import check_call
 
 import semver
 import yaml
@@ -53,6 +55,9 @@ class HelmChart:
 
     def run_helm_docs(self):
         logging.info("Generating helm readme...")
-        os.chdir(f"charts/{self.charts_path}/{self.chart_name}")
-        os.system("helm-docs .")
-        os.chdir("../../..")
+
+        check_call(
+            ["helm-docs", "-c", f"charts/{self.charts_path}/{self.chart_name}"],
+            stdout=DEVNULL,
+            stderr=STDOUT,
+        )
