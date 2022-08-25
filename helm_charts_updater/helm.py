@@ -13,7 +13,7 @@ from helm_charts_updater.models import Chart
 
 class HelmChart:
     def __init__(self):
-        self.charts_path = "charts"
+        self.charts_path = config.get_charts_path()
         self.chart_name = config.get_chart_name()
         self.app_version = config.get_app_version()
 

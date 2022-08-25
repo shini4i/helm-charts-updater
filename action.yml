@@ -14,6 +14,18 @@ inputs:
   gh_repo:
     description: "The name of git repository with helm charts"
     required: true
+  commit_author:
+    description: "The author that will be used to commit to charts repo"
+    required: false
+    default: "github-actions[bot]"
+  commit_email:
+    description: "The email that will be used to commit to charts repo"
+    required: false
+    default: "github-actions[bot]@users.noreply.github.com"
+  charts_path:
+    description: "Path to the location of helm charts in the gh_repo"
+    required: false
+    default: "charts"
   chart_name:
     description: "The name of the helm chart to update"
     required: true
@@ -35,6 +47,9 @@ runs:
     - ${{ inputs.github_token }}
     - ${{ inputs.gh_user }}
     - ${{ inputs.gh_repo }}
+    - ${{ inputs.charts_path }}
+    - ${{ inputs.commit_author }}
+    - ${{ inputs.commit_email }}
     - ${{ inputs.chart_name }}
     - ${{ inputs.app_version }}
     - ${{ inputs.generate_docs }}

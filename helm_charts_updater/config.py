@@ -14,14 +14,23 @@ class Config:
     def get_github_repo(self):
         return self.env("INPUT_GH_REPO")
 
+    def get_commit_author(self):
+        return self.env("INPUT_COMMIT_AUTHOR")
+
+    def get_commit_email(self):
+        return self.env("INPUT_COMMIT_EMAIL")
+
     def get_chart_name(self):
         return self.env("INPUT_CHART_NAME")
+
+    def get_charts_path(self):
+        return self.env("INPUT_CHARTS_PATH")
 
     def get_app_version(self):
         return self.env("INPUT_APP_VERSION")
 
     def generate_docs(self):
-        return self.env.bool("INPUT_GENERATE_DOCS", True)
+        return self.env.bool("INPUT_GENERATE_DOCS")
 
     def update_readme(self):
-        return self.env.bool("INPUT_UPDATE_README", True)
+        return self.env.bool("INPUT_UPDATE_README")
