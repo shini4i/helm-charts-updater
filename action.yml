@@ -2,8 +2,8 @@ name: "Helm Charts Updater"
 author: "Vadim Gedz"
 description: "A tool that will update helm charts in a given repository"
 branding:
-  icon: "arrow-up"
-  color: "purple"
+  icon: anchor
+  color: gray-dark
 inputs:
   github_token:
     description: "A token to commit to github repository"

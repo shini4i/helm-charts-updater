@@ -12,7 +12,7 @@ A tool that will update helm charts in a given repository
 
 ## Project Description
 
-> The project is still in a testing phase. Some issues might occur.
+> :warning: Currently, only patch version bump is supported for chart version.
 
 The use case is relatively niche. The idea is that there are a lot of helm charts in a single git
 repository, and it is required to bump both chart version and appVersion from a pipeline in a different repository.
@@ -25,7 +25,7 @@ It might be a good tandem for the [chart-releaser-action](https://github.com/hel
 
 ## Example Workflow
 
-```bash
+```yaml
 - name: Update helm chart
   uses: shini4i/helm-charts-updater@v1
   with:
@@ -41,20 +41,21 @@ It might be a good tandem for the [chart-releaser-action](https://github.com/hel
 
     # Optional. Git user.name
     # Defaults to github-actions[bot]
-    commit_author: John Doe
+    commit_author: github-actions[bot]
 
     # Optional. Git user.email
     # Defaults to github-actions[bot]@users.noreply.github.com
-    commit_email: john@doe.org
+    commit_email: github-actions[bot]@users.noreply.github.com
 
-    # Optional. Whether helm docs should be generated for the
-    # selected chart. Defaults to true.
+    # Optional. Whether helm docs should be generated for the selected chart.
+    # Defaults to true
     generate_docs: true
 
     # Optional. Whether the README should be updated with the table of existing charts.
-    # Defaults to true.
+    # Defaults to true
     # NOTE: It is required to have the following comments in the README.md file:
     # <!-- table_start -->
     # <!-- table_end -->
     # The table would be generated between those two comments.
     update_readme: true
+```
