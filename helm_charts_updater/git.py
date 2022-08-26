@@ -15,8 +15,8 @@ class GitRepository:
         self.repo = self._generate_repo_url()
         self.repo_path = "charts"
 
-        self.commit_author = "github-actions[bot]"
-        self.committer_email = "github-actions[bot]@users.noreply.github.com"
+        self.commit_author = config.get_commit_author()
+        self.committer_email = config.get_commit_email()
 
         self._clone()
         self.local_repo = Repo(self.repo_path)

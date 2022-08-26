@@ -35,6 +35,18 @@ It might be a good tandem for the [chart-releaser-action](https://github.com/hel
     chart_name: my-chart
     app_version: ${{ github.ref_name }}
 
+    # Optional. Path to the location of helm charts in the gh_repo
+    # Default to charts
+    charts_path: charts
+
+    # Optional. Git user.name
+    # Defaults to github-actions[bot]
+    commit_author: John Doe
+
+    # Optional. Git user.email
+    # Defaults to github-actions[bot]@users.noreply.github.com
+    commit_email: john@doe.org
+
     # Optional. Whether helm docs should be generated for the
     # selected chart. Defaults to true.
     generate_docs: true
