@@ -18,13 +18,14 @@ class Readme:
 
     @staticmethod
     def _generate_table(charts: list) -> PrettyTable:
-        headers = ["Name", "Description", "Version", "App Version"]
+        headers = ["Name", "Type", "Description", "Version", "App Version"]
         rows = []
 
         for chart in charts:
             rows.append(
                 [
                     chart.name,
+                    chart.type,
                     chart.description,
                     chart.version,
                     chart.appVersion,
