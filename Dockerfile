@@ -20,7 +20,7 @@ RUN poetry install \
  && poetry build \
  && pip install dist/*.whl
 
-RUN curl -o helm-docs.deb https://github.com/norwoodj/helm-docs/releases/download/v1.11.0/helm-docs_${HELM_DOCS_VERSION}_Linux_x86_64.deb \
+RUN curl -L -o helm-docs.deb https://github.com/norwoodj/helm-docs/releases/download/v${HELM_DOCS_VERSION}/helm-docs_${HELM_DOCS_VERSION}_Linux_x86_64.deb \
  && apt install ./helm-docs.deb \
  && rm -f ./helm-docs.deb
 
