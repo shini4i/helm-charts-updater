@@ -1,42 +1,27 @@
-ARG PYTHON_VERSION=3.10.3-slim-buster
-
-##################
-# Backend build
-##################
-FROM python:${PYTHON_VERSION} as builder
+FROM python:3.10.7-slim-buster
 
 WORKDIR /src
 
-RUN apt update \
- && apt install gcc -y \
- && apt clean
+ENV POETRY_HOME=/usr/bin/poetry \
+    PATH=/usr/bin/poetry/bin:$PATH \
+    POETRY_VERSION=1.2.1
 
-RUN pip install cryptography==3.1.1 \
- && pip install "poetry==1.1.5"
+ENV HELM_DOCS_VERSION=1.11.0
 
-COPY poetry.lock pyproject.toml /src/
+RUN apt update && apt install curl git -y
 
-RUN poetry export -f requirements.txt | pip install -r /dev/stdin
+RUN curl -sSL https://install.python-poetry.org > ./install-poetry.py \
+ && python ./install-poetry.py \
+ && rm -f ./install-poetry.py
 
 COPY . .
 
-RUN poetry build
+RUN poetry install \
+ && poetry build \
+ && pip install dist/*.whl
 
-##################
-# The resulting image build
-##################
-FROM python:${PYTHON_VERSION}
-
-WORKDIR /app
-
-COPY --from=builder /src/dist/*.tar.gz /app
-
-RUN apt update && apt install -y git wget && apt clean
-
-RUN wget https://github.com/norwoodj/helm-docs/releases/download/v1.11.0/helm-docs_1.11.0_Linux_x86_64.deb \
- && apt install ./helm-docs_1.11.0_Linux_x86_64.deb \
- && rm -f ./helm-docs_1.11.0_Linux_x86_64.deb
-
-RUN pip install *.tar.gz && rm -f *.tar.gz
+RUN curl -L -o helm-docs.deb https://github.com/norwoodj/helm-docs/releases/download/v${HELM_DOCS_VERSION}/helm-docs_${HELM_DOCS_VERSION}_Linux_x86_64.deb \
+ && apt install ./helm-docs.deb \
+ && rm -f ./helm-docs.deb
 
 ENTRYPOINT ["python", "/usr/local/bin/helm-charts-updater"]
