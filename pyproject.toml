@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "helm-charts-updater"
-version = "0.2.3"
+version = "0.2.6"
 description = "A tool that will update helm charts in a given repository"
 authors = ["Vadim Gedz <vadims@linux-tech.io>"]
 
