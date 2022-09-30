@@ -1,18 +1,8 @@
-FROM python:3.10.7-slim-buster
-
-WORKDIR /src
-
-ENV POETRY_HOME=/usr/bin/poetry \
-    PATH=/usr/bin/poetry/bin:$PATH \
-    POETRY_VERSION=1.2.1
+FROM ghcr.io/shini4i/python-poetry:3.10-1.2.1
 
 ENV HELM_DOCS_VERSION=1.11.0
 
 RUN apt update && apt install curl git -y
-
-RUN curl -sSL https://install.python-poetry.org > ./install-poetry.py \
- && python ./install-poetry.py \
- && rm -f ./install-poetry.py
 
 COPY . .
 
