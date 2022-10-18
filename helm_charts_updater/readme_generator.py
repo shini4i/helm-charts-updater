@@ -35,6 +35,7 @@ class Readme:
         table = PrettyTable(headers)
         table.set_style(MARKDOWN)
         table.add_rows(rows)
+        table.sortby = "Name"
 
         return table
 
