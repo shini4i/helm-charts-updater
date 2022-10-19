@@ -45,7 +45,7 @@ class GitRepository:
     ):
         logging.info("Committing changes...")
         commit_message = (
-            f"Bump {app_name} chart to {chart_version} [skip ci]\n"
+            f"Bump {app_name} chart to {chart_version}\n"
             f"appVersion {old_version} → {version}"
         )
 
