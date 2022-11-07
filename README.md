@@ -52,7 +52,7 @@ It might be a good tandem for the [chart-releaser-action](https://github.com/hel
     generate_docs: true
 
     # Optional. Whether the README should be updated with the table of existing charts.
-    # Defaults to true
+    # Defaults to false
     # NOTE: It is required to have the following comments in the README.md file:
     # <!-- table_start -->
     # <!-- table_end -->
