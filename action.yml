@@ -39,7 +39,7 @@ inputs:
   update_readme:
     description: "Create a table with a list of charts"
     required: false
-    default: "true"
+    default: "false"
 runs:
   using: "docker"
   image: "Dockerfile"
