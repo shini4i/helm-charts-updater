@@ -1,4 +1,5 @@
 import logging
+import sys
 from subprocess import DEVNULL
 from subprocess import STDOUT
 from subprocess import check_call
@@ -27,7 +28,7 @@ class HelmChart:
             return Chart(**yaml.safe_load(chart))
         except ValidationError as err:
             logging.error(err)
-            exit(1)
+            sys.exit(1)
 
     def update_chart_version(self) -> tuple:
         chart = self.parse_charts_yaml()
@@ -40,7 +41,7 @@ class HelmChart:
             logging.info(
                 f"No need to update {self.chart_name} chart version. Skipping..."
             )
-            exit(0)
+            sys.exit(0)
 
         logging.info(f"Bumping chart version from {chart.version} to {chart_version}")
         chart.version = semver.bump_patch(chart.version)

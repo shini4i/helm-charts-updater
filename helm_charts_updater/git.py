@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 from pathlib import Path
 
 import yaml
@@ -68,6 +69,6 @@ class GitRepository:
                         charts.append(Chart(**yaml.safe_load(file)))
                     except ValidationError as err:
                         logging.error(err)
-                        exit(1)
+                        sys.exit(1)
 
         return charts
