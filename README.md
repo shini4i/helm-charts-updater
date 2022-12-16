@@ -4,7 +4,7 @@
 
 A tool that will update helm charts in a given repository
 
-![GitHub Workflow Status](https://img.shields.io/github/workflow/status/shini4i/helm-charts-updater/Update%20Main%20Version?style=plastic)
+![GitHub last commit (branch)](https://img.shields.io/github/last-commit/shini4i/helm-charts-updater/main?style=plastic)
 ![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/shini4i/helm-charts-updater?style=plastic)
 ![GitHub](https://img.shields.io/github/license/shini4i/helm-charts-updater?style=plastic)
 
