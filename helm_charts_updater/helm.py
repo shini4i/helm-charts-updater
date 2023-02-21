@@ -46,11 +46,12 @@ class HelmChart:
         if chart.annotations is None:
             chart.annotations = {}
 
-        chart.annotations["artifacthub.io/changes"] = (
-            " | \n",
-            "- kind: changed\n",
-            f"  description: Bumped app version from {old_app_version} to {app_version}",
+        change_log = (
+            "| \n "
+            "- kind: changed\n"
+            f"  description: Bumped app version from {old_app_version} to {app_version}"
         )
+        chart.annotations["artifacthub.io/changes"] = change_log
 
         logging.info(f"Bumping chart version from {chart.version} to {chart_version}")
         chart.version = semver.bump_patch(chart.version)
