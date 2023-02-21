@@ -43,7 +43,11 @@ class HelmChart:
             )
             sys.exit(0)
 
+        if chart.annotations is None:
+            chart.annotations = {}
+
         chart.annotations["artifacthub.io/changes"] = (
+            " | \n",
             "- kind: changed\n",
             f"  description: Bumped app version from {old_app_version} to {app_version}",
         )
