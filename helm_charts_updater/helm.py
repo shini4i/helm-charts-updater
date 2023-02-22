@@ -54,7 +54,12 @@ class HelmChart:
             }
         ]
 
-        change_log_str = yaml.safe_dump(change_log, default_flow_style=False).strip()
+        change_log_str = "\n".join(
+            [
+                f"- kind: {item['kind']}\n  description: {item['description']}"
+                for item in change_log
+            ]
+        )
         chart.annotations["artifacthub.io/changes"] = f"|-\n{change_log_str}"
 
         logging.info(f"Bumping chart version from {chart.version} to {chart_version}")
