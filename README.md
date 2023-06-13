@@ -58,4 +58,10 @@ It might be a good tandem for the [chart-releaser-action](https://github.com/hel
     # <!-- table_end -->
     # The table would be generated between those two comments.
     update_readme: true
+
+    # Optional. Whether the chart annotation should be updated.
+    # Defaults to false
+    # If will update the chart annotation with the updated appVersion
+    # to generate changelog on the artifact hub.
+    update_chart_annotation: true
 ```
