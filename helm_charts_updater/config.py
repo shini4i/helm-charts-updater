@@ -35,5 +35,5 @@ class Config:
     def update_readme(self):
         return self.env.bool("INPUT_UPDATE_README")
 
-    def update_chart_annotation(self):
-        return self.env.bool("INPUT_UPDATE_CHART_ANNOTATION")
+    def update_chart_annotations(self):
+        return self.env.bool("INPUT_UPDATE_CHART_ANNOTATIONS")

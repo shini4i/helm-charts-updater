@@ -43,7 +43,7 @@ class HelmChart:
             )
             sys.exit(0)
 
-        if config.update_chart_annotation():
+        if config.update_chart_annotations():
             if chart.annotations is None:
                 chart.annotations = {}
 

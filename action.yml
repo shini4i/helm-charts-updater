@@ -40,8 +40,8 @@ inputs:
     description: "Create a table with a list of charts"
     required: false
     default: "false"
-  update_chart_annotation:
-    description: "Add annotation to the chart reflecting the updated appVersion"
+  update_chart_annotations:
+    description: "Add annotations to the chart reflecting the updated appVersion"
     required: false
     default: "false"
 runs:
@@ -58,4 +58,4 @@ runs:
     - ${{ inputs.app_version }}
     - ${{ inputs.generate_docs }}
     - ${{ inputs.update_readme }}
-    - ${{ inputs.update_chart_annotation }}
+    - ${{ inputs.update_chart_annotations }}
