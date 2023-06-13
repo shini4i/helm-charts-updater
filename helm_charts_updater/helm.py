@@ -43,6 +43,14 @@ class HelmChart:
             )
             sys.exit(0)
 
+        if config.update_chart_annotations():
+            if chart.annotations is None:
+                chart.annotations = {}
+
+            chart.annotations[
+                "artifacthub.io/changes"] = f"- kind: changed\n  description: Update {self.chart_name} app version from " \
+                                            f"{old_app_version} to {app_version}\n"
+
         logging.info(f"Bumping chart version from {chart.version} to {chart_version}")
         chart.version = semver.bump_patch(chart.version)
 
