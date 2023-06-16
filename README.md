@@ -63,5 +63,5 @@ It might be a good tandem for the [chart-releaser-action](https://github.com/hel
     # Defaults to false
     # If will update the chart annotation with the updated appVersion
     # to generate changelog on the artifact hub.
-    update_chart_annotation: true
+    update_chart_annotations: true
 ```
