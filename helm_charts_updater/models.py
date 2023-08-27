@@ -37,6 +37,7 @@ class Chart(BaseModel):
     type: Optional[str]
     sources: Optional[List[str]]
     version: str
+    keywords: Optional[List[str]]
     kubeVersion: Optional[str]
     appVersion: Optional[str]
     maintainers: Optional[List[Maintainer]]
