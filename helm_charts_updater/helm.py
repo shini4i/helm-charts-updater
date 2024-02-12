@@ -14,6 +14,7 @@ from helm_charts_updater.models import Chart
 
 class HelmChart:
     def __init__(self):
+        self.clone_path = config.get_clone_path()
         self.charts_path = config.get_charts_path()
         self.chart_name = config.get_chart_name()
         self.app_version = config.get_app_version()
@@ -21,7 +22,7 @@ class HelmChart:
     def parse_charts_yaml(self) -> Chart:
         logging.info(f"Parsing {self.chart_name}'s Chart.yaml...")
 
-        with open(f"charts/{self.charts_path}/{self.chart_name}/Chart.yaml", "r") as f:
+        with open(f"{self.clone_path}/{self.charts_path}/{self.chart_name}/Chart.yaml", "r") as f:
             chart = f.read()
 
         try:
@@ -57,7 +58,7 @@ class HelmChart:
         logging.info(f"Bumping app version from {chart.appVersion} to {app_version}")
         chart.appVersion = self.app_version
 
-        with open(f"charts/{self.charts_path}/{self.chart_name}/Chart.yaml", "w") as f:
+        with open(f"{self.clone_path}/{self.charts_path}/{self.chart_name}/Chart.yaml", "w") as f:
             yaml.safe_dump(chart.dict(exclude_none=True), sort_keys=False, stream=f)
 
         return chart_version, old_app_version
@@ -66,7 +67,7 @@ class HelmChart:
         logging.info("Generating helm readme...")
 
         check_call(
-            ["helm-docs", "-c", f"charts/{self.charts_path}/{self.chart_name}"],
+            ["helm-docs", "-c", f"{self.clone_path}/{self.charts_path}/{self.chart_name}"],
             stdout=DEVNULL,
             stderr=STDOUT,
         )
