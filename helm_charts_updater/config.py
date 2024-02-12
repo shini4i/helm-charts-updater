@@ -14,6 +14,9 @@ class Config:
     def get_github_repo(self):
         return self.env("INPUT_GH_REPO")
 
+    def get_clone_path(self):
+        return self.env("INPUT_CLONE_PATH")
+
     def get_commit_author(self):
         return self.env("INPUT_COMMIT_AUTHOR")
 

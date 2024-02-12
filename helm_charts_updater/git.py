@@ -14,7 +14,7 @@ from helm_charts_updater.models import Chart
 class GitRepository:
     def __init__(self):
         self.repo = self._generate_repo_url()
-        self.repo_path = "charts"
+        self.repo_path = config.get_clone_path()
 
         self.commit_author = config.get_commit_author()
         self.committer_email = config.get_commit_email()
