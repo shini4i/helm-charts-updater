@@ -24,10 +24,9 @@ class Dependency(BaseModel):
 
     @field_validator("version",  mode="before")
     def validate_version(cls, v) -> Optional[str]:
-        if semver.VersionInfo.is_valid(v):
-            return v
-        else:
+        if not semver.VersionInfo.is_valid(v):
             raise ValueError(f"{v} is not a valid version")
+        return v
 
 
 class Chart(BaseModel):
@@ -47,7 +46,6 @@ class Chart(BaseModel):
 
     @field_validator("version", mode="before")
     def validate_version(cls, v) -> Optional[str]:
-        if semver.VersionInfo.is_valid(v):
-            return v
-        else:
+        if not semver.VersionInfo.is_valid(v):
             raise ValueError(f"{v} is not a valid version")
+        return v
