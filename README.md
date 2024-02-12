@@ -12,7 +12,8 @@ A tool that will update helm charts in a given repository
 
 ## Project Description
 
-> :warning: Currently, only patch version bump is supported for chart version.
+> [!WARNING]
+> Currently, only patch version bump is supported for chart version.
 
 The use case is relatively niche. The idea is that there are a lot of helm charts in a single git
 repository, and it is required to bump both chart version and appVersion from a pipeline in a different repository.
