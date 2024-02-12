@@ -4,7 +4,7 @@ from typing import Optional
 import semver
 from pydantic import BaseModel
 from pydantic import Field
-from pydantic.v1 import validator
+from pydantic import field_validator
 
 
 class Maintainer(BaseModel):
@@ -22,7 +22,7 @@ class Dependency(BaseModel):
     importValues: Optional[List[str]] = Field(alias="import-values")
     alias: Optional[str]
 
-    @validator("version", pre=True)
+    @field_validator("version",  mode="before")
     def validate_version(cls, v) -> Optional[str]:
         if semver.VersionInfo.is_valid(v):
             return v
@@ -45,7 +45,7 @@ class Chart(BaseModel):
     icon: Optional[str]
     annotations: Optional[dict]
 
-    @validator("version", pre=True)
+    @field_validator("version", mode="before")
     def validate_version(cls, v) -> Optional[str]:
         if semver.VersionInfo.is_valid(v):
             return v
