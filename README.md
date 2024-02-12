@@ -35,6 +35,10 @@ It might be a good tandem for the [chart-releaser-action](https://github.com/hel
     chart_name: my-chart
     app_version: ${{ github.ref_name }}
 
+    # Optional. The path to clone the git repository
+    # Defaults to charts-repo
+    clone_path: charts-repo
+
     # Optional. Path to the location of helm charts in the gh_repo
     # Default to charts
     charts_path: charts

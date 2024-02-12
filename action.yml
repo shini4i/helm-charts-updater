@@ -14,6 +14,10 @@ inputs:
   gh_repo:
     description: "The name of git repository with helm charts"
     required: true
+  clone_path:
+    description: "The path to clone the git repository"
+    required: false
+    default: "charts-repo"
   commit_author:
     description: "The author that will be used to commit to charts repo"
     required: false

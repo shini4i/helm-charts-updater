@@ -3,10 +3,12 @@ import logging
 from prettytable import MARKDOWN
 from prettytable import PrettyTable
 
+from helm_charts_updater import config
+
 
 class Readme:
     def __init__(self):
-        self.readme_path = "charts/README.md"
+        self.readme_path = f"{config.get_clone_path()}/README.md"
         self.readme_content = self._read_readme()
 
         self.table_start_marker = "<!-- table_start -->"
@@ -43,9 +45,9 @@ class Readme:
         logging.info("Replacing table...")
 
         table_start = (
-            self.readme_content.find(self.table_start_marker)
-            + len(self.table_start_marker)
-            + 1
+                self.readme_content.find(self.table_start_marker)
+                + len(self.table_start_marker)
+                + 1
         )
         table_end = self.readme_content.find(self.table_end_marker)
 

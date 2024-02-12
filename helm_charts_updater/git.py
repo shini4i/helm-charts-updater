@@ -14,13 +14,13 @@ from helm_charts_updater.models import Chart
 class GitRepository:
     def __init__(self):
         self.repo = self._generate_repo_url()
-        self.repo_path = "charts"
+        self.clone_path = config.get_clone_path()
 
         self.commit_author = config.get_commit_author()
         self.committer_email = config.get_commit_email()
 
         self._clone()
-        self.local_repo = Repo(self.repo_path)
+        self.local_repo = Repo(self.clone_path)
 
     @staticmethod
     def _generate_repo_url() -> str:
@@ -31,9 +31,9 @@ class GitRepository:
         return f"https://{gh_token}@github.com/{gh_user}/{gh_repo}.git"
 
     def _clone(self):
-        if not os.path.exists(self.repo_path):
-            logging.info(f"Cloning helm charts repository to {self.repo_path}...")
-            Repo.clone_from(self.repo, self.repo_path)
+        if not os.path.exists(self.clone_path):
+            logging.info(f"Cloning helm charts repository to {self.clone_path}...")
+            Repo.clone_from(self.repo, self.clone_path)
 
     def _commit_changes(self, commit_message):
         self.local_repo.git.add(A=True)
@@ -42,7 +42,7 @@ class GitRepository:
         self.local_repo.index.commit(commit_message)
 
     def push_changes(
-        self, chart_version, app_name: str, version: str, old_version: str
+            self, chart_version, app_name: str, version: str, old_version: str
     ):
         logging.info("Committing changes...")
         commit_message = (
@@ -54,13 +54,12 @@ class GitRepository:
         origin = self.local_repo.remote(name="origin")
         origin.push()
 
-    @staticmethod
-    def get_charts_list() -> list:
+    def get_charts_list(self) -> list:
         logging.info("Getting charts list...")
 
         charts = []
 
-        for chart in Path("charts").rglob("Chart.yaml"):
+        for chart in Path(self.clone_path).rglob("Chart.yaml"):
             # We want to avoid including dependencies
             # in the resulting Charts list
             if len(str(chart).split("/")) <= 4:
