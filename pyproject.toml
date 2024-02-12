@@ -10,7 +10,7 @@ PyYAML = "^6.0.1"
 semver = "^2.13.0"
 GitPython = "^3.1.41"
 environs = "^10.0.0"
-pydantic = "^1.10.12"
+pydantic = "^2.0.0"
 prettytable = "^3.8.0"
 
 [tool.poetry.dev-dependencies]
