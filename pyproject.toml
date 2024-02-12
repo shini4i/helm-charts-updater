@@ -7,7 +7,7 @@ authors = ["Vadim Gedz <vadims@linux-tech.io>"]
 [tool.poetry.dependencies]
 python = "^3.10"
 PyYAML = "^6.0.1"
-semver = "^2.13.0"
+semver = "^3.0.0"
 GitPython = "^3.1.41"
 environs = "^10.0.0"
 pydantic = "^2.0.0"
