@@ -9,18 +9,18 @@ from pydantic import field_validator
 
 class Maintainer(BaseModel):
     name: str
-    email: Optional[str]
-    url: Optional[str]
+    email: Optional[str] = None
+    url: Optional[str] = None
 
 
 class Dependency(BaseModel):
     name: str
     version: str
-    repository: Optional[str]
-    condition: Optional[str]
-    tags: Optional[List[str]]
-    importValues: Optional[List[str]] = Field(alias="import-values")
-    alias: Optional[str]
+    repository: Optional[str] = None
+    condition: Optional[str] = None
+    tags: Optional[List[str]] = None
+    importValues: Optional[List[str]] = None
+    alias: Optional[str] = None
 
     @field_validator("version",  mode="before")
     def validate_version(cls, v) -> Optional[str]:
@@ -30,19 +30,19 @@ class Dependency(BaseModel):
 
 
 class Chart(BaseModel):
-    apiVersion: Optional[str]
+    apiVersion: Optional[str] = None
     name: str
     description: str
-    type: Optional[str]
-    sources: Optional[List[str]]
+    type: Optional[str] = None
+    sources: Optional[List[str]] = None
     version: str
-    keywords: Optional[List[str]]
-    kubeVersion: Optional[str]
-    appVersion: Optional[str]
-    maintainers: Optional[List[Maintainer]]
-    dependencies: Optional[List[Dependency]]
-    icon: Optional[str]
-    annotations: Optional[dict]
+    keywords: Optional[List[str]] = None
+    kubeVersion: Optional[str] = None
+    appVersion: Optional[str] = None
+    maintainers: Optional[List[Maintainer]] = None
+    dependencies: Optional[List[Dependency]] = None
+    icon: Optional[str] = None
+    annotations: Optional[dict] = None
 
     @field_validator("version", mode="before")
     def validate_version(cls, v) -> Optional[str]:
