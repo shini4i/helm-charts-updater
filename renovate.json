@@ -1,0 +1,20 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:base",
+    ":semanticCommits"
+  ],
+  "regexManagers": [
+    {
+      "fileMatch": ["^Dockerfile$"],
+      "matchStrings": ["ENV HELM_DOCS_VERSION=(?<currentValue>.*)"],
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "norwoodj/helm-docs",
+      "extractVersionTemplate": "v(?<version>.*)$"
+    }
+  ],
+  "automerge": true,
+  "stabilityDays": 1,
+  "prCreation": "not-pending",
+  "platformAutomerge": true
+}
