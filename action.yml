@@ -55,6 +55,7 @@ runs:
     - ${{ inputs.github_token }}
     - ${{ inputs.gh_user }}
     - ${{ inputs.gh_repo }}
+    - ${{ inputs.clone_path }}
     - ${{ inputs.charts_path }}
     - ${{ inputs.commit_author }}
     - ${{ inputs.commit_email }}
