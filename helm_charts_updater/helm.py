@@ -5,8 +5,9 @@ from subprocess import STDOUT
 from subprocess import check_call
 
 import semver
-import yaml
 from pydantic import ValidationError
+from ruamel.yaml import YAML
+from ruamel.yaml.scalarstring import LiteralScalarString
 
 from helm_charts_updater import config
 from helm_charts_updater.models import Chart
@@ -21,12 +22,13 @@ class HelmChart:
 
     def parse_charts_yaml(self) -> Chart:
         logging.info(f"Parsing {self.chart_name}'s Chart.yaml...")
+        yaml = YAML(typ="safe")
 
         with open(f"{self.clone_path}/{self.charts_path}/{self.chart_name}/Chart.yaml", "r") as f:
             chart = f.read()
 
         try:
-            return Chart(**yaml.safe_load(chart))
+            return Chart(**yaml.load(chart))
         except ValidationError as err:
             logging.error(err)
             sys.exit(1)
@@ -48,9 +50,9 @@ class HelmChart:
             if chart.annotations is None:
                 chart.annotations = {}
 
-            chart.annotations[
-                "artifacthub.io/changes"] = f"- kind: changed\n  description: Update {self.chart_name} app version from " \
-                                            f"{old_app_version} to {app_version}\n"
+            chart.annotations["artifacthub.io/changes"] = LiteralScalarString(
+                f"- kind: changed\n  description: Update {self.chart_name} "
+                f"app version from {old_app_version} to {app_version}\n")
 
         logging.info(f"Bumping chart version from {chart.version} to {chart_version}")
         chart.version = semver.bump_patch(chart.version)
@@ -58,8 +60,10 @@ class HelmChart:
         logging.info(f"Bumping app version from {chart.appVersion} to {app_version}")
         chart.appVersion = self.app_version
 
+        yaml = YAML()
+
         with open(f"{self.clone_path}/{self.charts_path}/{self.chart_name}/Chart.yaml", "w") as f:
-            yaml.safe_dump(chart.dict(exclude_none=True), sort_keys=False, stream=f)
+            yaml.dump(chart.dict(exclude_none=True), f)
 
         return chart_version, old_app_version
 

@@ -3,9 +3,9 @@ import os
 import sys
 from pathlib import Path
 
-import yaml
 from git import Repo
 from pydantic import ValidationError
+from ruamel.yaml import YAML
 
 from helm_charts_updater import config
 from helm_charts_updater.models import Chart
@@ -18,6 +18,8 @@ class GitRepository:
 
         self.commit_author = config.get_commit_author()
         self.committer_email = config.get_commit_email()
+
+        self.yaml = YAML(typ="safe")
 
         self._clone()
         self.local_repo = Repo(self.clone_path)
@@ -65,7 +67,7 @@ class GitRepository:
             if len(str(chart).split("/")) <= 4:
                 with open(chart, "r") as file:
                     try:
-                        charts.append(Chart(**yaml.safe_load(file)))
+                        charts.append(Chart(**self.yaml.load(file)))
                     except ValidationError as err:
                         logging.error(err)
                         sys.exit(1)
