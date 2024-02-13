@@ -43,13 +43,10 @@ class GitRepository:
         self.local_repo.git.config("user.email", self.committer_email)
         self.local_repo.index.commit(commit_message)
 
-    def push_changes(
-            self, chart_version, app_name: str, version: str, old_version: str
-    ):
+    def push_changes(self, chart_version, app_name: str, version: str, old_version: str):
         logging.info("Committing changes...")
         commit_message = (
-            f"Bump {app_name} chart to {chart_version}\n"
-            f"appVersion {old_version} → {version}"
+            f"Bump {app_name} chart to {chart_version}\n" f"appVersion {old_version} → {version}"
         )
 
         self._commit_changes(commit_message)

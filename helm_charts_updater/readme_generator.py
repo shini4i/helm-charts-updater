@@ -45,9 +45,7 @@ class Readme:
         logging.info("Replacing table...")
 
         table_start = (
-                self.readme_content.find(self.table_start_marker)
-                + len(self.table_start_marker)
-                + 1
+            self.readme_content.find(self.table_start_marker) + len(self.table_start_marker) + 1
         )
         table_end = self.readme_content.find(self.table_end_marker)
 

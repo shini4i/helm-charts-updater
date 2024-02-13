@@ -41,9 +41,7 @@ class HelmChart:
         old_app_version = chart.appVersion
 
         if app_version == old_app_version:
-            logging.info(
-                f"No need to update {self.chart_name} chart version. Skipping..."
-            )
+            logging.info(f"No need to update {self.chart_name} chart version. Skipping...")
             sys.exit(0)
 
         if config.update_chart_annotations():
@@ -52,7 +50,8 @@ class HelmChart:
 
             chart.annotations["artifacthub.io/changes"] = LiteralScalarString(
                 f"- kind: changed\n  description: Update {self.chart_name} "
-                f"app version from {old_app_version} to {app_version}\n")
+                f"app version from {old_app_version} to {app_version}\n"
+            )
 
         logging.info(f"Bumping chart version from {chart.version} to {chart_version}")
         chart.version = semver.bump_patch(chart.version)

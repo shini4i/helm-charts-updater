@@ -3,7 +3,6 @@ from typing import Optional
 
 import semver
 from pydantic import BaseModel
-from pydantic import Field
 from pydantic import field_validator
 
 
@@ -22,7 +21,7 @@ class Dependency(BaseModel):
     importValues: Optional[List[str]] = None
     alias: Optional[str] = None
 
-    @field_validator("version",  mode="before")
+    @field_validator("version", mode="before")
     def validate_version(cls, v) -> Optional[str]:
         if not semver.VersionInfo.is_valid(v):
             raise ValueError(f"{v} is not a valid version")
