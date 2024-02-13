@@ -16,3 +16,7 @@ bump-patch: ## Bump the patch version
 .PHONY: bump-minor
 bump-minor: ## Bump the minor version
 	@bump2version minor --allow-dirty
+
+.PHONY: test
+test: ## Run the tests
+	@poetry run pytest
