@@ -3,6 +3,7 @@ import os
 import sys
 from pathlib import Path
 
+from git import GitCommandError
 from git import Repo
 from pydantic import ValidationError
 from ruamel.yaml import YAML
@@ -36,6 +37,8 @@ class GitRepository:
         if not os.path.exists(self.clone_path):
             logging.info(f"Cloning helm charts repository to {self.clone_path}...")
             Repo.clone_from(self.repo, self.clone_path)
+            return
+        raise FileExistsError(f"{self.clone_path} already exists, this is unexpected")
 
     def _commit_changes(self, commit_message):
         self.local_repo.git.add(A=True)
@@ -51,7 +54,26 @@ class GitRepository:
 
         self._commit_changes(commit_message)
         origin = self.local_repo.remote(name="origin")
-        origin.push()
+
+        try:
+            origin.push()
+        except GitCommandError as error:
+            logging.error("Failed to push changes: %s", error)
+            if "Updates were rejected" in str(error):
+                logging.info("Pulling changes with rebase and retrying push...")
+                self.pull_with_rebase()
+                origin.push()
+
+    def pull_with_rebase(self):
+        logging.info("Pulling latest changes from the remote repo with rebase...")
+        origin = self.local_repo.remote(name="origin")
+        try:
+            self.local_repo.git.pull(
+                origin, self.local_repo.active_branch.name, strategy_option="ours", rebase=True
+            )
+        except GitCommandError as e:
+            logging.error("Error while pulling with rebase: %s", e)
+            raise GitCommandError
 
     def get_charts_list(self) -> list:
         logging.info("Getting charts list...")
