@@ -22,7 +22,7 @@ class HelmChart:
 
     def parse_charts_yaml(self) -> Chart:
         logging.info(f"Parsing {self.chart_name}'s Chart.yaml...")
-        yaml = YAML(typ="safe")
+        yaml = YAML(typ="rt")
 
         with open(f"{self.clone_path}/{self.charts_path}/{self.chart_name}/Chart.yaml", "r") as f:
             chart = f.read()
@@ -59,7 +59,7 @@ class HelmChart:
         logging.info(f"Bumping app version from {chart.appVersion} to {app_version}")
         chart.appVersion = self.app_version
 
-        yaml = YAML()
+        yaml = YAML(typ="rt")
 
         with open(f"{self.clone_path}/{self.charts_path}/{self.chart_name}/Chart.yaml", "w") as f:
             yaml.dump(chart.dict(exclude_none=True), f)
