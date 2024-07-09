@@ -1,6 +1,6 @@
 FROM python:3-slim-bullseye
 
-ENV HELM_DOCS_VERSION=1.13.1
+ENV HELM_DOCS_VERSION=1.14.2
 
 RUN apt update && apt install curl git -y
 
