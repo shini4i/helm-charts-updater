@@ -8,12 +8,12 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Install helm-docs with checksum verification
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN cd /tmp && \
     curl -fsSL -o helm-docs.tar.gz \
         "https://github.com/norwoodj/helm-docs/releases/download/v${HELM_DOCS_VERSION}/helm-docs_${HELM_DOCS_VERSION}_Linux_x86_64.tar.gz" && \
     curl -fsSL -o checksums.txt \
-        "https://github.com/norwoodj/helm-docs/releases/download/v${HELM_DOCS_VERSION}/helm-docs_${HELM_DOCS_VERSION}_checksums.txt" && \
+        "https://github.com/norwoodj/helm-docs/releases/download/v${HELM_DOCS_VERSION}/checksums.txt" && \
     grep "_Linux_x86_64.tar.gz" checksums.txt | sed 's/helm-docs.*tar.gz/helm-docs.tar.gz/' | sha256sum -c && \
     tar -xzf helm-docs.tar.gz helm-docs && \
     mv helm-docs /usr/local/bin/ && \
