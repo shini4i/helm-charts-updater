@@ -1,49 +1,39 @@
 FROM python:3.13-slim-bookworm
 
 ARG HELM_DOCS_VERSION=1.14.2
+ARG POETRY_VERSION=2.2.1
 
-# Install system dependencies and clean up in single layer
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        curl \
-        git \
-    && apt-get clean && \
+    apt-get install -y --no-install-recommends curl git && \
+    apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 # Install helm-docs with checksum verification
-RUN set -o pipefail && \
-    curl -L -o /tmp/helm-docs_${HELM_DOCS_VERSION}_Linux_x86_64.tar.gz \
+RUN cd /tmp && \
+    curl -fsSL -o helm-docs.tar.gz \
         "https://github.com/norwoodj/helm-docs/releases/download/v${HELM_DOCS_VERSION}/helm-docs_${HELM_DOCS_VERSION}_Linux_x86_64.tar.gz" && \
-    curl -L -o /tmp/helm-docs_checksums.txt \
+    curl -fsSL -o checksums.txt \
         "https://github.com/norwoodj/helm-docs/releases/download/v${HELM_DOCS_VERSION}/helm-docs_${HELM_DOCS_VERSION}_checksums.txt" && \
-    cd /tmp && grep "helm-docs_${HELM_DOCS_VERSION}_Linux_x86_64.tar.gz" helm-docs_checksums.txt | sha256sum -c - && \
-    tar -xzf helm-docs_${HELM_DOCS_VERSION}_Linux_x86_64.tar.gz helm-docs && \
-    mv helm-docs /usr/local/bin/helm-docs && \
-    rm -f /tmp/helm-docs_${HELM_DOCS_VERSION}_Linux_x86_64.tar.gz /tmp/helm-docs_checksums.txt
+    grep "_Linux_x86_64.tar.gz" checksums.txt | sed 's/helm-docs.*tar.gz/helm-docs.tar.gz/' | sha256sum -c && \
+    tar -xzf helm-docs.tar.gz helm-docs && \
+    mv helm-docs /usr/local/bin/ && \
+    rm -f helm-docs.tar.gz checksums.txt
 
-WORKDIR /app
-
-# Copy and install dependencies first for better caching
-COPY pyproject.toml poetry.lock ./
-
-ARG POETRY_VERSION=2.2.1
-
-RUN pip install --no-cache-dir poetry==${POETRY_VERSION} && \
-    poetry config virtualenvs.create false && \
-    poetry install --only main --no-interaction --no-ansi --no-root
-
-# Create non-root user for security
 RUN groupadd --gid 1000 appuser && \
     useradd --uid 1000 --gid appuser --shell /bin/bash --create-home appuser
 
-# Copy application code (read-only for security)
-COPY --chown=appuser:appuser --chmod=555 helm_charts_updater/ ./helm_charts_updater/
+WORKDIR /app
 
-# Install the package to create the console script entry point
-RUN poetry install --only main --no-interaction --no-ansi && \
-    pip uninstall -y poetry
+COPY pyproject.toml poetry.lock ./
+COPY helm_charts_updater/ ./helm_charts_updater/
 
-# Switch to non-root user
+RUN pip install --no-cache-dir poetry==${POETRY_VERSION} && \
+    poetry config virtualenvs.create false && \
+    poetry install --only main --no-interaction --no-ansi && \
+    pip uninstall -y poetry && \
+    chmod -R a-w helm_charts_updater/ && \
+    chown -R appuser:appuser .
+
 USER appuser
 
 ENTRYPOINT ["helm-charts-updater"]

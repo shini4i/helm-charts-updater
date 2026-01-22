@@ -217,8 +217,10 @@ class GitRepository:
             except ValueError:
                 continue
 
-            # Skip if 'charts' appears in path parts (indicates dependency)
-            if "charts" in rel_path.parts:
+            # Skip dependency charts: 'charts' appearing after the first path component
+            # indicates a vendored dependency (e.g., my-chart/charts/redis/Chart.yaml)
+            # but allow top-level charts/ directory (e.g., charts/my-chart/Chart.yaml)
+            if "charts" in rel_path.parts[1:]:
                 continue
 
             with open(chart_path, encoding="utf-8") as file:

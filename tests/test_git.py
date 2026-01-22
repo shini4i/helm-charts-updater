@@ -461,6 +461,59 @@ version: 2.0.0
     @patch("helm_charts_updater.git.config")
     @patch("helm_charts_updater.git.Repo")
     @patch("os.path.exists")
+    def test_get_charts_list_includes_top_level_charts_directory(
+        self,
+        mock_exists: MagicMock,
+        mock_repo_class: MagicMock,
+        mock_config: MagicMock,
+        tmp_path: Path,
+    ) -> None:
+        """Test that charts in a top-level charts/ directory are included."""
+        mock_config.get_github_token.return_value = "token"
+        mock_config.get_github_user.return_value = "user"
+        mock_config.get_github_repo.return_value = "repo"
+        mock_config.get_clone_path.return_value = str(tmp_path)
+        mock_config.get_commit_author.return_value = "Author"
+        mock_config.get_commit_email.return_value = "author@test.com"
+        mock_exists.return_value = False
+
+        mock_repo = MagicMock()
+        mock_repo_class.return_value = mock_repo
+
+        # Create a chart in top-level charts/ directory (common repo structure)
+        charts_dir = tmp_path / "charts" / "my-app"
+        charts_dir.mkdir(parents=True)
+        chart_yaml = charts_dir / "Chart.yaml"
+        chart_yaml.write_text(
+            """apiVersion: v2
+name: my-app
+description: An app chart
+version: 1.0.0
+"""
+        )
+
+        # Create a dependency inside that chart (should be excluded)
+        dep_dir = charts_dir / "charts" / "redis"
+        dep_dir.mkdir(parents=True)
+        dep_yaml = dep_dir / "Chart.yaml"
+        dep_yaml.write_text(
+            """apiVersion: v2
+name: redis
+description: Redis dependency
+version: 6.0.0
+"""
+        )
+
+        git_repo = GitRepository()
+        charts = git_repo.get_charts_list()
+
+        # Should find the top-level charts/my-app but not charts/my-app/charts/redis
+        assert len(charts) == 1
+        assert charts[0].name == "my-app"
+
+    @patch("helm_charts_updater.git.config")
+    @patch("helm_charts_updater.git.Repo")
+    @patch("os.path.exists")
     def test_get_charts_list_empty_directory(
         self,
         mock_exists: MagicMock,

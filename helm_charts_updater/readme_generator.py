@@ -91,24 +91,18 @@ class Readme:
         logging.info("Replacing table...")
 
         start_pos = self.readme_content.find(self.table_start_marker)
-        end_pos = self.readme_content.find(self.table_end_marker)
-
         if start_pos == -1:
             raise IndexError(
                 f"Table start marker '{self.table_start_marker}' not found in README. "
                 "Please add the marker to your README.md file."
             )
 
+        # Search for end marker AFTER start marker to avoid false matches
+        end_pos = self.readme_content.find(self.table_end_marker, start_pos)
         if end_pos == -1:
             raise IndexError(
                 f"Table end marker '{self.table_end_marker}' not found in README. "
                 "Please add the marker to your README.md file."
-            )
-
-        if start_pos >= end_pos:
-            raise IndexError(
-                f"Table start marker must appear before end marker. "
-                f"Found start at position {start_pos}, end at position {end_pos}."
             )
 
         # Calculate the position after the start marker, detecting the newline type
@@ -121,16 +115,18 @@ class Readme:
         elif content_after_marker.startswith("\n"):
             newline = "\n"
         else:
-            # No newline after marker, default to LF
             newline = "\n"
 
         table_start = marker_end + len(newline) if content_after_marker.startswith(
             newline
         ) else marker_end
 
+        # Use detected newline to preserve line endings
+        table_content = table.get_string().replace("\n", newline)
+
         self.readme_content = (
             f"{self.readme_content[:table_start]}"
-            f"{table.get_string()}\n"
+            f"{table_content}{newline}"
             f"{self.readme_content[end_pos:]}"
         )
 

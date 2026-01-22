@@ -171,7 +171,9 @@ Some content
         with pytest.raises(IndexError) as exc_info:
             readme._replace_table(table)
 
-        assert "start marker must appear before end marker" in str(exc_info.value)
+        # End marker before start won't be found when searching from start position
+        assert "Table end marker" in str(exc_info.value)
+        assert "not found" in str(exc_info.value)
 
     @patch("helm_charts_updater.readme_generator.config")
     def test_replace_table_with_crlf_line_endings(self, mock_config: MagicMock) -> None:
