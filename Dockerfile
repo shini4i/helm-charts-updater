@@ -1,7 +1,6 @@
 FROM python:3.13-slim-bookworm
 
 ARG HELM_DOCS_VERSION=1.14.2
-ARG POETRY_VERSION=2.2.1
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends curl git && \
@@ -24,13 +23,10 @@ RUN groupadd --gid 1000 appuser && \
 
 WORKDIR /app
 
-COPY pyproject.toml poetry.lock ./
+COPY pyproject.toml README.md ./
 COPY helm_charts_updater/ ./helm_charts_updater/
 
-RUN pip install --no-cache-dir poetry==${POETRY_VERSION} && \
-    poetry config virtualenvs.create false && \
-    poetry install --only main --no-interaction --no-ansi && \
-    pip uninstall -y poetry && \
+RUN pip install --no-cache-dir . && \
     chmod -R a-w helm_charts_updater/ && \
     chown -R appuser:appuser .
 
