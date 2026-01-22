@@ -143,3 +143,29 @@ class TestConfig:
         with patch.dict(os.environ, {"INPUT_UPDATE_CHART_ANNOTATIONS": "false"}):
             config = Config()
             assert config.update_chart_annotations() is False
+
+    def test_generate_docs_default_when_unset(self) -> None:
+        """Test generate_docs returns False by default when env var is not set."""
+        # Create a clean environment without INPUT_GENERATE_DOCS
+        clean_env = {k: v for k, v in os.environ.items() if k != "INPUT_GENERATE_DOCS"}
+        with patch.dict(os.environ, clean_env, clear=True):
+            config = Config()
+            assert config.generate_docs() is False
+
+    def test_update_readme_default_when_unset(self) -> None:
+        """Test update_readme returns False by default when env var is not set."""
+        # Create a clean environment without INPUT_UPDATE_README
+        clean_env = {k: v for k, v in os.environ.items() if k != "INPUT_UPDATE_README"}
+        with patch.dict(os.environ, clean_env, clear=True):
+            config = Config()
+            assert config.update_readme() is False
+
+    def test_update_chart_annotations_default_when_unset(self) -> None:
+        """Test update_chart_annotations returns False by default when env var is not set."""
+        # Create a clean environment without INPUT_UPDATE_CHART_ANNOTATIONS
+        clean_env = {
+            k: v for k, v in os.environ.items() if k != "INPUT_UPDATE_CHART_ANNOTATIONS"
+        }
+        with patch.dict(os.environ, clean_env, clear=True):
+            config = Config()
+            assert config.update_chart_annotations() is False

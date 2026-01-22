@@ -24,6 +24,14 @@ Additionally, it can generate helm readme and generate table of the existing cha
 
 It might be a good tandem for the [chart-releaser-action](https://github.com/helm/chart-releaser-action).
 
+## Requirements
+
+> [!NOTE]
+> **Minimum supported Python version: 3.13**
+>
+> If running locally (outside of the Docker container), ensure Python 3.13+ is installed.
+> You can use [pyenv](https://github.com/pyenv/pyenv) or [asdf](https://asdf-vm.com/) to manage Python versions.
+
 ## Example Workflow
 
 ```yaml

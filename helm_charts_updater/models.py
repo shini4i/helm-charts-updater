@@ -5,9 +5,6 @@ Helm Chart.yaml files.
 """
 
 from typing import Any
-from typing import Dict
-from typing import List
-from typing import Optional
 
 import semver
 from pydantic import BaseModel
@@ -24,8 +21,8 @@ class Maintainer(BaseModel):
     """
 
     name: str
-    email: Optional[str] = None
-    url: Optional[str] = None
+    email: str | None = None
+    url: str | None = None
 
 
 class Dependency(BaseModel):
@@ -43,11 +40,11 @@ class Dependency(BaseModel):
 
     name: str
     version: str
-    repository: Optional[str] = None
-    condition: Optional[str] = None
-    tags: Optional[List[str]] = None
-    importValues: Optional[List[str]] = None
-    alias: Optional[str] = None
+    repository: str | None = None
+    condition: str | None = None
+    tags: list[str] | None = None
+    importValues: list[str] | None = None
+    alias: str | None = None
 
     @field_validator("version", mode="before")
     @classmethod
@@ -90,19 +87,19 @@ class Chart(BaseModel):
         annotations: Additional annotations (key-value pairs).
     """
 
-    apiVersion: Optional[str] = None
+    apiVersion: str | None = None
     name: str
     description: str
-    type: Optional[str] = None
-    sources: Optional[List[str]] = None
+    type: str | None = None
+    sources: list[str] | None = None
     version: str
-    keywords: Optional[List[str]] = None
-    kubeVersion: Optional[str] = None
-    appVersion: Optional[str] = None
-    maintainers: Optional[List[Maintainer]] = None
-    dependencies: Optional[List[Dependency]] = None
-    icon: Optional[str] = None
-    annotations: Optional[Dict[str, Any]] = None
+    keywords: list[str] | None = None
+    kubeVersion: str | None = None
+    appVersion: str | None = None
+    maintainers: list[Maintainer] | None = None
+    dependencies: list[Dependency] | None = None
+    icon: str | None = None
+    annotations: dict[str, Any] | None = None
 
     @field_validator("version", mode="before")
     @classmethod

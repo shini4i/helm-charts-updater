@@ -6,7 +6,6 @@ with a table of available Helm charts.
 
 import logging
 from pathlib import Path
-from typing import List
 
 from prettytable import PrettyTable
 from prettytable import TableStyle
@@ -49,7 +48,7 @@ class Readme:
             return readme_file.read()
 
     @staticmethod
-    def _generate_table(charts: List[Chart]) -> PrettyTable:
+    def _generate_table(charts: list[Chart]) -> PrettyTable:
         """Generate a markdown table from the list of charts.
 
         Args:
@@ -86,7 +85,8 @@ class Readme:
             table: The PrettyTable to insert into the README.
 
         Raises:
-            IndexError: If start or end marker is not found in the README.
+            IndexError: If start or end marker is not found in the README,
+                or if end marker appears before start marker.
         """
         logging.info("Replacing table...")
 
@@ -105,8 +105,28 @@ class Readme:
                 "Please add the marker to your README.md file."
             )
 
-        # Calculate the position after the start marker (including newline)
-        table_start = start_pos + len(self.table_start_marker) + 1
+        if start_pos >= end_pos:
+            raise IndexError(
+                f"Table start marker must appear before end marker. "
+                f"Found start at position {start_pos}, end at position {end_pos}."
+            )
+
+        # Calculate the position after the start marker, detecting the newline type
+        marker_end = start_pos + len(self.table_start_marker)
+        content_after_marker = self.readme_content[marker_end:]
+
+        # Detect newline sequence (CRLF or LF)
+        if content_after_marker.startswith("\r\n"):
+            newline = "\r\n"
+        elif content_after_marker.startswith("\n"):
+            newline = "\n"
+        else:
+            # No newline after marker, default to LF
+            newline = "\n"
+
+        table_start = marker_end + len(newline) if content_after_marker.startswith(
+            newline
+        ) else marker_end
 
         self.readme_content = (
             f"{self.readme_content[:table_start]}"
@@ -114,7 +134,7 @@ class Readme:
             f"{self.readme_content[end_pos:]}"
         )
 
-    def update_readme(self, charts: List[Chart]) -> None:
+    def update_readme(self, charts: list[Chart]) -> None:
         """Update the README with a table of charts.
 
         Generates a markdown table from the provided charts and

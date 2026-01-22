@@ -2,9 +2,8 @@
 
 import os
 from pathlib import Path
+from collections.abc import Generator
 from typing import Any
-from typing import Dict
-from typing import Generator
 from unittest.mock import MagicMock
 from unittest.mock import patch
 
@@ -12,7 +11,7 @@ import pytest
 
 
 @pytest.fixture
-def mock_env_vars() -> Generator[Dict[str, str], None, None]:
+def mock_env_vars() -> Generator[dict[str, str], None, None]:
     """Fixture to set up required environment variables.
 
     Yields:
@@ -56,7 +55,7 @@ maintainers:
 
 
 @pytest.fixture
-def sample_chart_data() -> Dict[str, Any]:
+def sample_chart_data() -> dict[str, Any]:
     """Fixture providing valid Chart data as a dictionary.
 
     Returns:

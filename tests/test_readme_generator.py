@@ -152,6 +152,79 @@ Some content
 
         assert "table_end" in str(exc_info.value)
 
+    @patch("helm_charts_updater.readme_generator.config")
+    def test_replace_table_markers_wrong_order(self, mock_config: MagicMock) -> None:
+        """Test that markers in wrong order raises IndexError."""
+        mock_config.get_clone_path.return_value = "/tmp/repo"
+
+        readme_content = """# README
+<!-- table_end -->
+Some content
+<!-- table_start -->
+"""  # End marker before start marker
+
+        with patch("builtins.open", mock_open(read_data=readme_content)):
+            readme = Readme()
+
+        table = PrettyTable(["Name"])
+
+        with pytest.raises(IndexError) as exc_info:
+            readme._replace_table(table)
+
+        assert "start marker must appear before end marker" in str(exc_info.value)
+
+    @patch("helm_charts_updater.readme_generator.config")
+    def test_replace_table_with_crlf_line_endings(self, mock_config: MagicMock) -> None:
+        """Test table replacement with CRLF line endings (Windows-style)."""
+        mock_config.get_clone_path.return_value = "/tmp/repo"
+
+        # README with CRLF line endings
+        readme_content = (
+            "# README\r\n"
+            "<!-- table_start -->\r\n"
+            "old content\r\n"
+            "<!-- table_end -->\r\n"
+            "## Footer\r\n"
+        )
+
+        with patch("builtins.open", mock_open(read_data=readme_content)):
+            readme = Readme()
+
+        table = PrettyTable(["Name", "Version"])
+        table.add_row(["test-chart", "1.0.0"])
+
+        readme._replace_table(table)
+
+        # Verify markers are preserved
+        assert "<!-- table_start -->" in readme.readme_content
+        assert "<!-- table_end -->" in readme.readme_content
+        # Verify new content is present
+        assert "test-chart" in readme.readme_content
+        # Verify surrounding content is preserved
+        assert "# README" in readme.readme_content
+        assert "## Footer" in readme.readme_content
+
+    @patch("helm_charts_updater.readme_generator.config")
+    def test_replace_table_no_newline_after_marker(self, mock_config: MagicMock) -> None:
+        """Test table replacement when there's no newline after start marker."""
+        mock_config.get_clone_path.return_value = "/tmp/repo"
+
+        # README with no newline immediately after start marker
+        readme_content = "<!-- table_start -->old content\n<!-- table_end -->"
+
+        with patch("builtins.open", mock_open(read_data=readme_content)):
+            readme = Readme()
+
+        table = PrettyTable(["Name"])
+        table.add_row(["test-chart"])
+
+        readme._replace_table(table)
+
+        # Verify markers and content
+        assert "<!-- table_start -->" in readme.readme_content
+        assert "<!-- table_end -->" in readme.readme_content
+        assert "test-chart" in readme.readme_content
+
 
 class TestReadmeUpdateReadme:
     """Tests for full README update."""
@@ -160,7 +233,7 @@ class TestReadmeUpdateReadme:
     def test_update_readme_writes_file(
         self, mock_config: MagicMock, sample_readme_with_markers: str
     ) -> None:
-        """Test that update_readme writes the updated content."""
+        """Test that update_readme writes the updated content with correct data."""
         mock_config.get_clone_path.return_value = "/tmp/repo"
 
         charts = [
@@ -178,8 +251,23 @@ class TestReadmeUpdateReadme:
             readme = Readme()
             readme.update_readme(charts)
 
-            # Verify file was written
-            mock_file().write.assert_called()
+            # Verify file was written with correct content
+            mock_file().write.assert_called_once()
+            written_content = mock_file().write.call_args[0][0]
+
+            # Verify markers are preserved
+            assert "<!-- table_start -->" in written_content
+            assert "<!-- table_end -->" in written_content
+
+            # Verify chart data is in the written content
+            assert "updated-chart" in written_content
+            assert "Updated chart" in written_content
+            assert "3.0.0" in written_content
+            assert "application" in written_content
+
+            # Verify original surrounding content is preserved
+            assert "# Charts Repository" in written_content
+            assert "## Usage" in written_content
 
     @patch("helm_charts_updater.readme_generator.config")
     def test_update_readme_preserves_surrounding_content(

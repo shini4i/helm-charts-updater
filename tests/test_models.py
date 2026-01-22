@@ -1,7 +1,6 @@
 """Tests for Pydantic models."""
 
 from typing import Any
-from typing import Dict
 
 import pytest
 from pydantic import ValidationError
@@ -91,7 +90,7 @@ class TestDependency:
 class TestChart:
     """Tests for Chart model."""
 
-    def test_valid_chart_all_fields(self, sample_chart_data: Dict[str, Any]) -> None:
+    def test_valid_chart_all_fields(self, sample_chart_data: dict[str, Any]) -> None:
         """Test creating a chart with all common fields."""
         chart = Chart(**sample_chart_data)
         assert chart.name == "test-chart"

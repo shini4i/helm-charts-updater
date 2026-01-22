@@ -23,10 +23,17 @@ COPY pyproject.toml poetry.lock ./
 
 RUN pip install --no-cache-dir poetry && \
     poetry config virtualenvs.create false && \
-    poetry install --only main --no-interaction --no-ansi && \
+    poetry install --only main --no-interaction --no-ansi --no-root && \
     pip uninstall -y poetry
 
+# Create non-root user for security
+RUN groupadd --gid 1000 appuser && \
+    useradd --uid 1000 --gid appuser --shell /bin/bash --create-home appuser
+
 # Copy application code
-COPY helm_charts_updater/ ./helm_charts_updater/
+COPY --chown=appuser:appuser helm_charts_updater/ ./helm_charts_updater/
+
+# Switch to non-root user
+USER appuser
 
 ENTRYPOINT ["helm-charts-updater"]

@@ -51,16 +51,16 @@ inputs:
 runs:
   using: "docker"
   image: "Dockerfile"
-  args:
-    - ${{ inputs.github_token }}
-    - ${{ inputs.gh_user }}
-    - ${{ inputs.gh_repo }}
-    - ${{ inputs.clone_path }}
-    - ${{ inputs.charts_path }}
-    - ${{ inputs.commit_author }}
-    - ${{ inputs.commit_email }}
-    - ${{ inputs.chart_name }}
-    - ${{ inputs.app_version }}
-    - ${{ inputs.generate_docs }}
-    - ${{ inputs.update_readme }}
-    - ${{ inputs.update_chart_annotations }}
+  env:
+    INPUT_GITHUB_TOKEN: ${{ inputs.github_token }}
+    INPUT_GH_USER: ${{ inputs.gh_user }}
+    INPUT_GH_REPO: ${{ inputs.gh_repo }}
+    INPUT_CLONE_PATH: ${{ inputs.clone_path }}
+    INPUT_CHARTS_PATH: ${{ inputs.charts_path }}
+    INPUT_COMMIT_AUTHOR: ${{ inputs.commit_author }}
+    INPUT_COMMIT_EMAIL: ${{ inputs.commit_email }}
+    INPUT_CHART_NAME: ${{ inputs.chart_name }}
+    INPUT_APP_VERSION: ${{ inputs.app_version }}
+    INPUT_GENERATE_DOCS: ${{ inputs.generate_docs }}
+    INPUT_UPDATE_README: ${{ inputs.update_readme }}
+    INPUT_UPDATE_CHART_ANNOTATIONS: ${{ inputs.update_chart_annotations }}

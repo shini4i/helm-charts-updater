@@ -9,8 +9,6 @@ import os
 import re
 import sys
 from pathlib import Path
-from typing import List
-from typing import Optional
 
 from git import GitCommandError
 from git import Repo
@@ -97,7 +95,7 @@ class GitRepository:
                     command="clone",
                     status=1,
                     stderr=sanitized_error,
-                ) from None
+                ) from e
             return
         raise FileExistsError(
             f"Clone path '{self.clone_path}' already exists. "
@@ -116,7 +114,7 @@ class GitRepository:
         self.local_repo.index.commit(commit_message)
 
     def push_changes(
-        self, chart_version: str, app_name: str, version: str, old_version: Optional[str]
+        self, chart_version: str, app_name: str, version: str, old_version: str | None
     ) -> None:
         """Commit and push chart version changes to the remote repository.
 
@@ -159,7 +157,7 @@ class GitRepository:
                         command="push",
                         status=1,
                         stderr=sanitized_retry,
-                    ) from None
+                    ) from retry_error
             else:
                 raise
 
@@ -183,13 +181,18 @@ class GitRepository:
         except GitCommandError as e:
             sanitized_error = _sanitize_url(str(e))
             logging.error("Error while pulling with rebase: %s", sanitized_error)
-            raise
+            raise GitCommandError(
+                command="pull",
+                status=1,
+                stderr=sanitized_error,
+            ) from e
 
-    def get_charts_list(self) -> List[Chart]:
+    def get_charts_list(self) -> list[Chart]:
         """Get a list of all top-level Helm charts in the repository.
 
         Searches for Chart.yaml files and filters out dependency charts
-        based on directory depth.
+        by checking if 'charts' appears in the relative path (indicating
+        it's inside a dependency charts/ directory).
 
         Returns:
             A list of Chart model instances for each discovered chart.
@@ -199,18 +202,26 @@ class GitRepository:
         """
         logging.info("Getting charts list...")
 
-        charts: List[Chart] = []
+        charts: list[Chart] = []
+        clone_path = Path(self.clone_path)
 
-        for chart_path in Path(self.clone_path).rglob("Chart.yaml"):
-            # Filter out dependency charts by checking path depth
-            # Top-level charts: clone_path/charts_path/chart_name/Chart.yaml (4 parts)
-            # Dependencies: clone_path/charts_path/chart_name/charts/dep/Chart.yaml (6+ parts)
-            if len(chart_path.parts) <= 4:
-                with open(chart_path, "r", encoding="utf-8") as file:
-                    try:
-                        charts.append(Chart(**self.yaml.load(file)))
-                    except ValidationError as err:
-                        logging.error("Failed to parse %s: %s", chart_path, err)
-                        sys.exit(1)
+        for chart_path in clone_path.rglob("Chart.yaml"):
+            # Filter out dependency charts by checking if 'charts' appears
+            # in the relative path (dependency charts are in charts/ subdirs)
+            try:
+                rel_path = chart_path.relative_to(clone_path)
+            except ValueError:
+                continue
+
+            # Skip if 'charts' appears in path parts (indicates dependency)
+            if "charts" in rel_path.parts:
+                continue
+
+            with open(chart_path, "r", encoding="utf-8") as file:
+                try:
+                    charts.append(Chart(**self.yaml.load(file)))
+                except ValidationError as err:
+                    logging.error("Failed to parse %s: %s", chart_path, err)
+                    sys.exit(1)
 
         return charts

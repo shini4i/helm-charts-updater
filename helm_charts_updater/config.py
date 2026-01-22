@@ -143,30 +143,24 @@ class Config:
 
         Returns:
             True if helm-docs should be run, False otherwise.
-
-        Raises:
-            environs.EnvError: If INPUT_GENERATE_DOCS is not set.
+            Defaults to False when not running under GitHub Actions.
         """
-        return self.env.bool("INPUT_GENERATE_DOCS")
+        return self.env.bool("INPUT_GENERATE_DOCS", False)
 
     def update_readme(self) -> bool:
         """Check if the README should be updated with a charts table.
 
         Returns:
             True if README should be updated, False otherwise.
-
-        Raises:
-            environs.EnvError: If INPUT_UPDATE_README is not set.
+            Defaults to False when not running under GitHub Actions.
         """
-        return self.env.bool("INPUT_UPDATE_README")
+        return self.env.bool("INPUT_UPDATE_README", False)
 
     def update_chart_annotations(self) -> bool:
         """Check if chart annotations should be updated.
 
         Returns:
             True if annotations should be updated, False otherwise.
-
-        Raises:
-            environs.EnvError: If INPUT_UPDATE_CHART_ANNOTATIONS is not set.
+            Defaults to False when not running under GitHub Actions.
         """
-        return self.env.bool("INPUT_UPDATE_CHART_ANNOTATIONS")
+        return self.env.bool("INPUT_UPDATE_CHART_ANNOTATIONS", False)

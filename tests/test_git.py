@@ -1,6 +1,8 @@
 """Tests for the GitRepository class."""
 
+from pathlib import Path
 from unittest.mock import MagicMock
+from unittest.mock import mock_open
 from unittest.mock import patch
 
 import pytest
@@ -311,3 +313,209 @@ class TestGitRepositoryPullWithRebase:
 
         with pytest.raises(GitCommandError):
             git_repo.pull_with_rebase()
+
+
+class TestGitRepositoryPushNonRejectionError:
+    """Tests for push errors that are not rejections."""
+
+    @patch("helm_charts_updater.git.config")
+    @patch("helm_charts_updater.git.Repo")
+    @patch("os.path.exists")
+    def test_push_changes_reraises_non_rejection_error(
+        self, mock_exists: MagicMock, mock_repo_class: MagicMock, mock_config: MagicMock
+    ) -> None:
+        """Test that non-rejection push errors are re-raised without retry."""
+        mock_config.get_github_token.return_value = "token"
+        mock_config.get_github_user.return_value = "user"
+        mock_config.get_github_repo.return_value = "repo"
+        mock_config.get_clone_path.return_value = "/tmp/clone"
+        mock_config.get_commit_author.return_value = "Author"
+        mock_config.get_commit_email.return_value = "author@test.com"
+        mock_exists.return_value = False
+
+        mock_repo = MagicMock()
+        mock_remote = MagicMock()
+        # Push fails with authentication error (not rejection)
+        mock_remote.push.side_effect = GitCommandError(
+            "push", 1, "Authentication failed for repository"
+        )
+        mock_repo.remote.return_value = mock_remote
+        mock_repo_class.return_value = mock_repo
+
+        git_repo = GitRepository()
+
+        with pytest.raises(GitCommandError) as exc_info:
+            git_repo.push_changes("1.0.1", "app", "1.2.3", "1.2.2")
+
+        # Should have only tried push once (no retry)
+        assert mock_remote.push.call_count == 1
+        # Pull with rebase should NOT have been called
+        mock_repo.git.pull.assert_not_called()
+        # Error should be raised
+        assert "Authentication failed" in str(exc_info.value)
+
+
+class TestGitRepositoryGetChartsList:
+    """Tests for get_charts_list functionality."""
+
+    @patch("helm_charts_updater.git.config")
+    @patch("helm_charts_updater.git.Repo")
+    @patch("os.path.exists")
+    def test_get_charts_list_finds_top_level_charts(
+        self,
+        mock_exists: MagicMock,
+        mock_repo_class: MagicMock,
+        mock_config: MagicMock,
+        tmp_path: Path,
+    ) -> None:
+        """Test that get_charts_list finds top-level Chart.yaml files."""
+        mock_config.get_github_token.return_value = "token"
+        mock_config.get_github_user.return_value = "user"
+        mock_config.get_github_repo.return_value = "repo"
+        mock_config.get_clone_path.return_value = str(tmp_path)
+        mock_config.get_commit_author.return_value = "Author"
+        mock_config.get_commit_email.return_value = "author@test.com"
+        mock_exists.return_value = False
+
+        mock_repo = MagicMock()
+        mock_repo_class.return_value = mock_repo
+
+        # Create a top-level chart
+        chart_dir = tmp_path / "my-chart"
+        chart_dir.mkdir(parents=True)
+        chart_yaml = chart_dir / "Chart.yaml"
+        chart_yaml.write_text(
+            """apiVersion: v2
+name: my-chart
+description: A test chart
+version: 1.0.0
+appVersion: "1.0.0"
+"""
+        )
+
+        git_repo = GitRepository()
+        charts = git_repo.get_charts_list()
+
+        assert len(charts) == 1
+        assert charts[0].name == "my-chart"
+        assert charts[0].version == "1.0.0"
+
+    @patch("helm_charts_updater.git.config")
+    @patch("helm_charts_updater.git.Repo")
+    @patch("os.path.exists")
+    def test_get_charts_list_filters_dependency_charts(
+        self,
+        mock_exists: MagicMock,
+        mock_repo_class: MagicMock,
+        mock_config: MagicMock,
+        tmp_path: Path,
+    ) -> None:
+        """Test that get_charts_list filters out dependency charts."""
+        mock_config.get_github_token.return_value = "token"
+        mock_config.get_github_user.return_value = "user"
+        mock_config.get_github_repo.return_value = "repo"
+        mock_config.get_clone_path.return_value = str(tmp_path)
+        mock_config.get_commit_author.return_value = "Author"
+        mock_config.get_commit_email.return_value = "author@test.com"
+        mock_exists.return_value = False
+
+        mock_repo = MagicMock()
+        mock_repo_class.return_value = mock_repo
+
+        # Create a top-level chart
+        chart_dir = tmp_path / "my-chart"
+        chart_dir.mkdir(parents=True)
+        chart_yaml = chart_dir / "Chart.yaml"
+        chart_yaml.write_text(
+            """apiVersion: v2
+name: my-chart
+description: A test chart
+version: 1.0.0
+"""
+        )
+
+        # Create a dependency chart inside charts/ subdirectory
+        dep_chart_dir = chart_dir / "charts" / "dependency"
+        dep_chart_dir.mkdir(parents=True)
+        dep_chart_yaml = dep_chart_dir / "Chart.yaml"
+        dep_chart_yaml.write_text(
+            """apiVersion: v2
+name: dependency
+description: A dependency chart
+version: 2.0.0
+"""
+        )
+
+        git_repo = GitRepository()
+        charts = git_repo.get_charts_list()
+
+        # Should only find the top-level chart, not the dependency
+        assert len(charts) == 1
+        assert charts[0].name == "my-chart"
+
+    @patch("helm_charts_updater.git.config")
+    @patch("helm_charts_updater.git.Repo")
+    @patch("os.path.exists")
+    def test_get_charts_list_empty_directory(
+        self,
+        mock_exists: MagicMock,
+        mock_repo_class: MagicMock,
+        mock_config: MagicMock,
+        tmp_path: Path,
+    ) -> None:
+        """Test get_charts_list returns empty list when no charts found."""
+        mock_config.get_github_token.return_value = "token"
+        mock_config.get_github_user.return_value = "user"
+        mock_config.get_github_repo.return_value = "repo"
+        mock_config.get_clone_path.return_value = str(tmp_path)
+        mock_config.get_commit_author.return_value = "Author"
+        mock_config.get_commit_email.return_value = "author@test.com"
+        mock_exists.return_value = False
+
+        mock_repo = MagicMock()
+        mock_repo_class.return_value = mock_repo
+
+        git_repo = GitRepository()
+        charts = git_repo.get_charts_list()
+
+        assert len(charts) == 0
+
+    @patch("helm_charts_updater.git.config")
+    @patch("helm_charts_updater.git.Repo")
+    @patch("os.path.exists")
+    def test_get_charts_list_invalid_chart_exits(
+        self,
+        mock_exists: MagicMock,
+        mock_repo_class: MagicMock,
+        mock_config: MagicMock,
+        tmp_path: Path,
+    ) -> None:
+        """Test that invalid Chart.yaml causes system exit."""
+        mock_config.get_github_token.return_value = "token"
+        mock_config.get_github_user.return_value = "user"
+        mock_config.get_github_repo.return_value = "repo"
+        mock_config.get_clone_path.return_value = str(tmp_path)
+        mock_config.get_commit_author.return_value = "Author"
+        mock_config.get_commit_email.return_value = "author@test.com"
+        mock_exists.return_value = False
+
+        mock_repo = MagicMock()
+        mock_repo_class.return_value = mock_repo
+
+        # Create an invalid chart (missing required fields)
+        chart_dir = tmp_path / "invalid-chart"
+        chart_dir.mkdir(parents=True)
+        chart_yaml = chart_dir / "Chart.yaml"
+        chart_yaml.write_text(
+            """apiVersion: v2
+name: invalid-chart
+# Missing required 'description' and 'version' fields
+"""
+        )
+
+        git_repo = GitRepository()
+
+        with pytest.raises(SystemExit) as exc_info:
+            git_repo.get_charts_list()
+
+        assert exc_info.value.code == 1
