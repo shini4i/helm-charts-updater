@@ -21,7 +21,7 @@ def mock_env_vars() -> Generator[dict[str, str], None, None]:
         "INPUT_GITHUB_TOKEN": "test-token-12345",
         "INPUT_GH_USER": "test-user",
         "INPUT_GH_REPO": "test-repo",
-        "INPUT_CLONE_PATH": "/tmp/test-clone",
+        "INPUT_CLONE_PATH": "/mock/test-clone",
         "INPUT_COMMIT_AUTHOR": "Test Author",
         "INPUT_COMMIT_EMAIL": "test@example.com",
         "INPUT_CHART_NAME": "test-chart",

@@ -17,14 +17,14 @@ class TestHelmChartInit:
     @patch("helm_charts_updater.helm.config")
     def test_init_sets_attributes(self, mock_config: MagicMock) -> None:
         """Test that __init__ sets all attributes from config."""
-        mock_config.get_clone_path.return_value = "/tmp/clone"
+        mock_config.get_clone_path.return_value = "/mock/clone"
         mock_config.get_charts_path.return_value = "charts"
         mock_config.get_chart_name.return_value = "my-chart"
         mock_config.get_app_version.return_value = "2.0.0"
 
         helm = HelmChart()
 
-        assert helm.clone_path == "/tmp/clone"
+        assert helm.clone_path == "/mock/clone"
         assert helm.charts_path == "charts"
         assert helm.chart_name == "my-chart"
         assert helm.app_version == "2.0.0"
@@ -38,7 +38,7 @@ class TestHelmChartParseYaml:
         self, mock_config: MagicMock, sample_chart_yaml: str
     ) -> None:
         """Test parsing a valid Chart.yaml file."""
-        mock_config.get_clone_path.return_value = "/tmp"
+        mock_config.get_clone_path.return_value = "/mock"
         mock_config.get_charts_path.return_value = "charts"
         mock_config.get_chart_name.return_value = "test-chart"
         mock_config.get_app_version.return_value = "1.0.0"
@@ -55,7 +55,7 @@ class TestHelmChartParseYaml:
     @patch("helm_charts_updater.helm.config")
     def test_parse_charts_yaml_invalid_exits(self, mock_config: MagicMock) -> None:
         """Test that invalid Chart.yaml causes sys.exit."""
-        mock_config.get_clone_path.return_value = "/tmp"
+        mock_config.get_clone_path.return_value = "/mock"
         mock_config.get_charts_path.return_value = "charts"
         mock_config.get_chart_name.return_value = "test-chart"
         mock_config.get_app_version.return_value = "1.0.0"
@@ -82,7 +82,7 @@ class TestHelmChartUpdateVersion:
         self, mock_config: MagicMock, sample_chart_yaml: str
     ) -> None:
         """Test that update is skipped when appVersion is unchanged."""
-        mock_config.get_clone_path.return_value = "/tmp"
+        mock_config.get_clone_path.return_value = "/mock"
         mock_config.get_charts_path.return_value = "charts"
         mock_config.get_chart_name.return_value = "test-chart"
         mock_config.get_app_version.return_value = "1.0.0"  # Same as in chart
@@ -101,7 +101,7 @@ class TestHelmChartUpdateVersion:
         self, mock_config: MagicMock, sample_chart_yaml: str
     ) -> None:
         """Test that chart version is bumped correctly."""
-        mock_config.get_clone_path.return_value = "/tmp"
+        mock_config.get_clone_path.return_value = "/mock"
         mock_config.get_charts_path.return_value = "charts"
         mock_config.get_chart_name.return_value = "test-chart"
         mock_config.get_app_version.return_value = "2.0.0"  # Different from chart
@@ -120,7 +120,7 @@ class TestHelmChartUpdateVersion:
         self, mock_config: MagicMock, sample_chart_yaml: str
     ) -> None:
         """Test that annotations are updated when enabled."""
-        mock_config.get_clone_path.return_value = "/tmp"
+        mock_config.get_clone_path.return_value = "/mock"
         mock_config.get_charts_path.return_value = "charts"
         mock_config.get_chart_name.return_value = "test-chart"
         mock_config.get_app_version.return_value = "2.0.0"
@@ -144,7 +144,7 @@ class TestHelmChartRunDocs:
         self, mock_config: MagicMock, mock_check_call: MagicMock
     ) -> None:
         """Test helm-docs is called with correct arguments."""
-        mock_config.get_clone_path.return_value = "/tmp"
+        mock_config.get_clone_path.return_value = "/mock"
         mock_config.get_charts_path.return_value = "charts"
         mock_config.get_chart_name.return_value = "test-chart"
         mock_config.get_app_version.return_value = "1.0.0"
@@ -165,7 +165,7 @@ class TestHelmChartGetChartPath:
     @patch("helm_charts_updater.helm.config")
     def test_get_chart_path(self, mock_config: MagicMock) -> None:
         """Test chart path generation."""
-        mock_config.get_clone_path.return_value = "/tmp/clone"
+        mock_config.get_clone_path.return_value = "/mock/clone"
         mock_config.get_charts_path.return_value = "charts"
         mock_config.get_chart_name.return_value = "my-chart"
         mock_config.get_app_version.return_value = "1.0.0"
@@ -173,4 +173,4 @@ class TestHelmChartGetChartPath:
         helm = HelmChart()
         path = helm._get_chart_path()
 
-        assert path == Path("/tmp/clone/charts/my-chart/Chart.yaml")
+        assert path == Path("/mock/clone/charts/my-chart/Chart.yaml")

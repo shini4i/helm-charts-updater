@@ -67,7 +67,7 @@ class TestConfig:
     def test_get_clone_path(self, mock_env_vars: dict) -> None:
         """Test that get_clone_path returns correct value."""
         config = Config()
-        assert config.get_clone_path() == "/tmp/test-clone"
+        assert config.get_clone_path() == "/mock/test-clone"
 
     def test_get_commit_author(self, mock_env_vars: dict) -> None:
         """Test that get_commit_author returns correct value."""

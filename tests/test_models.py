@@ -67,11 +67,12 @@ class TestDependency:
         with pytest.raises(ValidationError) as exc_info:
             Dependency(name="test", version="not-semver")
 
-        assert "not a valid semantic version" in str(exc_info.value)
+        assert "not a valid semver range" in str(exc_info.value)
 
     @pytest.mark.parametrize(
         "version",
         [
+            # Strict versions
             "1.0.0",
             "2.3.4",
             "0.0.1",
@@ -79,10 +80,18 @@ class TestDependency:
             "1.0.0-alpha",
             "1.0.0-beta.1",
             "1.0.0+build",
+            # Semver ranges (Helm dependency format)
+            "^1.0.0",
+            "~2.3.4",
+            ">=1.0.0",
+            ">=1.0.0 <2.0.0",
+            "1.x",
+            "1.*",
+            "*",
         ],
     )
     def test_valid_dependency_versions(self, version: str) -> None:
-        """Test that valid semver versions are accepted."""
+        """Test that valid semver versions and ranges are accepted."""
         dep = Dependency(name="test", version=version)
         assert dep.version == version
 

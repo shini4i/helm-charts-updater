@@ -9,6 +9,7 @@ from typing import Any
 import semver
 from pydantic import BaseModel
 from pydantic import field_validator
+from semantic_version import NpmSpec
 
 
 class Maintainer(BaseModel):
@@ -49,7 +50,9 @@ class Dependency(BaseModel):
     @field_validator("version", mode="before")
     @classmethod
     def validate_version(cls, v: Any) -> str:
-        """Validate that the version is a valid semver string.
+        """Validate that the version is a valid semver range string.
+
+        Uses NpmSpec to validate semver ranges as used in Helm chart dependencies.
 
         Args:
             v: The version value to validate.
@@ -58,10 +61,12 @@ class Dependency(BaseModel):
             The validated version string.
 
         Raises:
-            ValueError: If the version is not valid semver.
+            ValueError: If the version is not a valid semver range.
         """
-        if not semver.Version.is_valid(str(v)):
-            raise ValueError(f"{v} is not a valid semantic version")
+        try:
+            NpmSpec(str(v))
+        except ValueError as e:
+            raise ValueError(f"{v} is not a valid semver range: {e}") from e
         return str(v)
 
 

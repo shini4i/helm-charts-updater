@@ -2,7 +2,6 @@
 
 from pathlib import Path
 from unittest.mock import MagicMock
-from unittest.mock import mock_open
 from unittest.mock import patch
 
 import pytest
@@ -55,7 +54,7 @@ class TestGitRepositoryGenerateUrl:
         mock_config.get_github_token.return_value = "test-token"
         mock_config.get_github_user.return_value = "test-user"
         mock_config.get_github_repo.return_value = "test-repo"
-        mock_config.get_clone_path.return_value = "/tmp/clone"
+        mock_config.get_clone_path.return_value = "/mock/clone"
         mock_config.get_commit_author.return_value = "Author"
         mock_config.get_commit_email.return_value = "author@test.com"
         mock_exists.return_value = False
@@ -81,7 +80,7 @@ class TestGitRepositoryClone:
         mock_config.get_github_token.return_value = "token"
         mock_config.get_github_user.return_value = "user"
         mock_config.get_github_repo.return_value = "repo"
-        mock_config.get_clone_path.return_value = "/tmp/clone"
+        mock_config.get_clone_path.return_value = "/mock/clone"
         mock_config.get_commit_author.return_value = "Author"
         mock_config.get_commit_email.return_value = "author@test.com"
         mock_exists.return_value = False
@@ -97,7 +96,7 @@ class TestGitRepositoryClone:
         self, mock_exists: MagicMock, mock_repo: MagicMock, mock_config: MagicMock
     ) -> None:
         """Test that existing clone path raises FileExistsError."""
-        mock_config.get_clone_path.return_value = "/tmp/existing"
+        mock_config.get_clone_path.return_value = "/mock/existing"
         mock_config.get_github_token.return_value = "token"
         mock_config.get_github_user.return_value = "user"
         mock_config.get_github_repo.return_value = "repo"
@@ -120,7 +119,7 @@ class TestGitRepositoryClone:
         mock_config.get_github_token.return_value = "secret-token"
         mock_config.get_github_user.return_value = "user"
         mock_config.get_github_repo.return_value = "repo"
-        mock_config.get_clone_path.return_value = "/tmp/clone"
+        mock_config.get_clone_path.return_value = "/mock/clone"
         mock_config.get_commit_author.return_value = "Author"
         mock_config.get_commit_email.return_value = "author@test.com"
         mock_exists.return_value = False
@@ -149,7 +148,7 @@ class TestGitRepositoryPush:
         mock_config.get_github_token.return_value = "token"
         mock_config.get_github_user.return_value = "user"
         mock_config.get_github_repo.return_value = "repo"
-        mock_config.get_clone_path.return_value = "/tmp/clone"
+        mock_config.get_clone_path.return_value = "/mock/clone"
         mock_config.get_commit_author.return_value = "Author"
         mock_config.get_commit_email.return_value = "author@test.com"
         mock_exists.return_value = False
@@ -174,7 +173,7 @@ class TestGitRepositoryPush:
         mock_config.get_github_token.return_value = "token"
         mock_config.get_github_user.return_value = "user"
         mock_config.get_github_repo.return_value = "repo"
-        mock_config.get_clone_path.return_value = "/tmp/clone"
+        mock_config.get_clone_path.return_value = "/mock/clone"
         mock_config.get_commit_author.return_value = "Author"
         mock_config.get_commit_email.return_value = "author@test.com"
         mock_exists.return_value = False
@@ -207,7 +206,7 @@ class TestGitRepositoryPush:
         mock_config.get_github_token.return_value = "token"
         mock_config.get_github_user.return_value = "user"
         mock_config.get_github_repo.return_value = "repo"
-        mock_config.get_clone_path.return_value = "/tmp/clone"
+        mock_config.get_clone_path.return_value = "/mock/clone"
         mock_config.get_commit_author.return_value = "Author"
         mock_config.get_commit_email.return_value = "author@test.com"
         mock_exists.return_value = False
@@ -237,7 +236,7 @@ class TestGitRepositoryPush:
         mock_config.get_github_token.return_value = "secret-token"
         mock_config.get_github_user.return_value = "user"
         mock_config.get_github_repo.return_value = "repo"
-        mock_config.get_clone_path.return_value = "/tmp/clone"
+        mock_config.get_clone_path.return_value = "/mock/clone"
         mock_config.get_commit_author.return_value = "Author"
         mock_config.get_commit_email.return_value = "author@test.com"
         mock_exists.return_value = False
@@ -275,7 +274,7 @@ class TestGitRepositoryPullWithRebase:
         mock_config.get_github_token.return_value = "token"
         mock_config.get_github_user.return_value = "user"
         mock_config.get_github_repo.return_value = "repo"
-        mock_config.get_clone_path.return_value = "/tmp/clone"
+        mock_config.get_clone_path.return_value = "/mock/clone"
         mock_config.get_commit_author.return_value = "Author"
         mock_config.get_commit_email.return_value = "author@test.com"
         mock_exists.return_value = False
@@ -299,7 +298,7 @@ class TestGitRepositoryPullWithRebase:
         mock_config.get_github_token.return_value = "token"
         mock_config.get_github_user.return_value = "user"
         mock_config.get_github_repo.return_value = "repo"
-        mock_config.get_clone_path.return_value = "/tmp/clone"
+        mock_config.get_clone_path.return_value = "/mock/clone"
         mock_config.get_commit_author.return_value = "Author"
         mock_config.get_commit_email.return_value = "author@test.com"
         mock_exists.return_value = False
@@ -328,7 +327,7 @@ class TestGitRepositoryPushNonRejectionError:
         mock_config.get_github_token.return_value = "token"
         mock_config.get_github_user.return_value = "user"
         mock_config.get_github_repo.return_value = "repo"
-        mock_config.get_clone_path.return_value = "/tmp/clone"
+        mock_config.get_clone_path.return_value = "/mock/clone"
         mock_config.get_commit_author.return_value = "Author"
         mock_config.get_commit_email.return_value = "author@test.com"
         mock_exists.return_value = False

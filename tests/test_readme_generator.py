@@ -20,7 +20,7 @@ class TestReadmeInit:
         self, mock_config: MagicMock, sample_readme_with_markers: str
     ) -> None:
         """Test that __init__ reads the README file."""
-        mock_config.get_clone_path.return_value = "/tmp/repo"
+        mock_config.get_clone_path.return_value = "/mock/repo"
 
         with patch("builtins.open", mock_open(read_data=sample_readme_with_markers)):
             readme = Readme()
@@ -101,7 +101,7 @@ class TestReadmeReplaceTable:
         self, mock_config: MagicMock, sample_readme_with_markers: str
     ) -> None:
         """Test successful table replacement."""
-        mock_config.get_clone_path.return_value = "/tmp/repo"
+        mock_config.get_clone_path.return_value = "/mock/repo"
 
         with patch("builtins.open", mock_open(read_data=sample_readme_with_markers)):
             readme = Readme()
@@ -120,7 +120,7 @@ class TestReadmeReplaceTable:
         self, mock_config: MagicMock, sample_readme_without_markers: str
     ) -> None:
         """Test that missing start marker raises IndexError."""
-        mock_config.get_clone_path.return_value = "/tmp/repo"
+        mock_config.get_clone_path.return_value = "/mock/repo"
 
         with patch("builtins.open", mock_open(read_data=sample_readme_without_markers)):
             readme = Readme()
@@ -135,7 +135,7 @@ class TestReadmeReplaceTable:
     @patch("helm_charts_updater.readme_generator.config")
     def test_replace_table_missing_end_marker(self, mock_config: MagicMock) -> None:
         """Test that missing end marker raises IndexError."""
-        mock_config.get_clone_path.return_value = "/tmp/repo"
+        mock_config.get_clone_path.return_value = "/mock/repo"
 
         readme_content = """# README
 <!-- table_start -->
@@ -155,7 +155,7 @@ Some content
     @patch("helm_charts_updater.readme_generator.config")
     def test_replace_table_markers_wrong_order(self, mock_config: MagicMock) -> None:
         """Test that markers in wrong order raises IndexError."""
-        mock_config.get_clone_path.return_value = "/tmp/repo"
+        mock_config.get_clone_path.return_value = "/mock/repo"
 
         readme_content = """# README
 <!-- table_end -->
@@ -176,7 +176,7 @@ Some content
     @patch("helm_charts_updater.readme_generator.config")
     def test_replace_table_with_crlf_line_endings(self, mock_config: MagicMock) -> None:
         """Test table replacement with CRLF line endings (Windows-style)."""
-        mock_config.get_clone_path.return_value = "/tmp/repo"
+        mock_config.get_clone_path.return_value = "/mock/repo"
 
         # README with CRLF line endings
         readme_content = (
@@ -207,7 +207,7 @@ Some content
     @patch("helm_charts_updater.readme_generator.config")
     def test_replace_table_no_newline_after_marker(self, mock_config: MagicMock) -> None:
         """Test table replacement when there's no newline after start marker."""
-        mock_config.get_clone_path.return_value = "/tmp/repo"
+        mock_config.get_clone_path.return_value = "/mock/repo"
 
         # README with no newline immediately after start marker
         readme_content = "<!-- table_start -->old content\n<!-- table_end -->"
@@ -234,7 +234,7 @@ class TestReadmeUpdateReadme:
         self, mock_config: MagicMock, sample_readme_with_markers: str
     ) -> None:
         """Test that update_readme writes the updated content with correct data."""
-        mock_config.get_clone_path.return_value = "/tmp/repo"
+        mock_config.get_clone_path.return_value = "/mock/repo"
 
         charts = [
             Chart(
@@ -274,7 +274,7 @@ class TestReadmeUpdateReadme:
         self, mock_config: MagicMock, sample_readme_with_markers: str
     ) -> None:
         """Test that content before and after markers is preserved."""
-        mock_config.get_clone_path.return_value = "/tmp/repo"
+        mock_config.get_clone_path.return_value = "/mock/repo"
 
         charts = [
             Chart(

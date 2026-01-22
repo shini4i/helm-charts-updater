@@ -217,7 +217,7 @@ class GitRepository:
             if "charts" in rel_path.parts:
                 continue
 
-            with open(chart_path, "r", encoding="utf-8") as file:
+            with open(chart_path, encoding="utf-8") as file:
                 try:
                     charts.append(Chart(**self.yaml.load(file)))
                 except ValidationError as err:
