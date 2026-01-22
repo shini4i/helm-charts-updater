@@ -1,10 +1,25 @@
+"""Main entry point for helm-charts-updater.
+
+This module provides the main function that orchestrates the helm chart
+update workflow.
+"""
+
 from helm_charts_updater import config
 from helm_charts_updater.git import GitRepository
 from helm_charts_updater.helm import HelmChart
 from helm_charts_updater.readme_generator import Readme
 
 
-def main():
+def main() -> None:
+    """Execute the helm charts update workflow.
+
+    This function orchestrates the complete workflow:
+    1. Clone the charts repository
+    2. Update the chart version and appVersion
+    3. Optionally generate helm-docs documentation
+    4. Optionally update the README with a charts table
+    5. Commit and push the changes
+    """
     repo = GitRepository()
 
     chart = HelmChart()

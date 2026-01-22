@@ -1,15 +1,32 @@
-FROM python:3-slim-bullseye
+FROM python:3.13-slim-bookworm
 
-ENV HELM_DOCS_VERSION=1.14.2
+ARG HELM_DOCS_VERSION=1.14.2
 
-RUN apt update && apt install curl git -y
+# Install system dependencies and clean up in single layer
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        curl \
+        git \
+    && apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-COPY . .
+# Install helm-docs
+RUN curl -L -o /tmp/helm-docs.deb \
+        "https://github.com/norwoodj/helm-docs/releases/download/v${HELM_DOCS_VERSION}/helm-docs_${HELM_DOCS_VERSION}_Linux_x86_64.deb" && \
+    dpkg -i /tmp/helm-docs.deb && \
+    rm -f /tmp/helm-docs.deb
 
-RUN pip install .
+WORKDIR /app
 
-RUN curl -L -o helm-docs.deb https://github.com/norwoodj/helm-docs/releases/download/v${HELM_DOCS_VERSION}/helm-docs_${HELM_DOCS_VERSION}_Linux_x86_64.deb \
- && apt install ./helm-docs.deb \
- && rm -f ./helm-docs.deb
+# Copy and install dependencies first for better caching
+COPY pyproject.toml poetry.lock ./
 
-ENTRYPOINT ["python", "/usr/local/bin/helm-charts-updater"]
+RUN pip install --no-cache-dir poetry && \
+    poetry config virtualenvs.create false && \
+    poetry install --only main --no-interaction --no-ansi && \
+    pip uninstall -y poetry
+
+# Copy application code
+COPY helm_charts_updater/ ./helm_charts_updater/
+
+ENTRYPOINT ["helm-charts-updater"]

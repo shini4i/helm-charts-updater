@@ -1,25 +1,63 @@
-import logging
+"""README generation for helm-charts-updater.
 
-from prettytable import MARKDOWN
+This module provides functionality to update the repository README
+with a table of available Helm charts.
+"""
+
+import logging
+from pathlib import Path
+from typing import List
+
 from prettytable import PrettyTable
+from prettytable import TableStyle
 
 from helm_charts_updater import config
+from helm_charts_updater.models import Chart
 
 
 class Readme:
-    def __init__(self):
-        self.readme_path = f"{config.get_clone_path()}/README.md"
+    """Manages README updates with a charts table.
+
+    Updates the repository README.md file with a markdown table
+    listing all available Helm charts and their versions.
+
+    Attributes:
+        readme_path: Path to the README.md file.
+        readme_content: Current content of the README file.
+        table_start_marker: HTML comment marking table start.
+        table_end_marker: HTML comment marking table end.
+    """
+
+    def __init__(self) -> None:
+        """Initialize Readme with the path to README.md."""
+        self.readme_path = Path(config.get_clone_path()) / "README.md"
         self.readme_content = self._read_readme()
 
         self.table_start_marker = "<!-- table_start -->"
         self.table_end_marker = "<!-- table_end -->"
 
     def _read_readme(self) -> str:
-        with open(self.readme_path, "r") as readme_file:
+        """Read the README file content.
+
+        Returns:
+            The content of the README file as a string.
+
+        Raises:
+            FileNotFoundError: If the README file does not exist.
+        """
+        with open(self.readme_path, "r", encoding="utf-8") as readme_file:
             return readme_file.read()
 
     @staticmethod
-    def _generate_table(charts: list) -> PrettyTable:
+    def _generate_table(charts: List[Chart]) -> PrettyTable:
+        """Generate a markdown table from the list of charts.
+
+        Args:
+            charts: List of Chart model instances.
+
+        Returns:
+            A PrettyTable configured for markdown output.
+        """
         headers = ["Name", "Type", "Description", "Version", "App Version"]
         rows = []
 
@@ -35,34 +73,63 @@ class Readme:
             )
 
         table = PrettyTable(headers)
-        table.set_style(MARKDOWN)
+        table.set_style(TableStyle.MARKDOWN)
         table.add_rows(rows)
         table.sortby = "Name"
 
         return table
 
-    def _replace_table(self, table: PrettyTable):
+    def _replace_table(self, table: PrettyTable) -> None:
+        """Replace the table content between markers in the README.
+
+        Args:
+            table: The PrettyTable to insert into the README.
+
+        Raises:
+            IndexError: If start or end marker is not found in the README.
+        """
         logging.info("Replacing table...")
 
-        table_start = (
-            self.readme_content.find(self.table_start_marker) + len(self.table_start_marker) + 1
-        )
-        table_end = self.readme_content.find(self.table_end_marker)
+        start_pos = self.readme_content.find(self.table_start_marker)
+        end_pos = self.readme_content.find(self.table_end_marker)
 
-        if table_start == len(self.table_start_marker):
-            raise IndexError("Table start marker not found")
+        if start_pos == -1:
+            raise IndexError(
+                f"Table start marker '{self.table_start_marker}' not found in README. "
+                "Please add the marker to your README.md file."
+            )
+
+        if end_pos == -1:
+            raise IndexError(
+                f"Table end marker '{self.table_end_marker}' not found in README. "
+                "Please add the marker to your README.md file."
+            )
+
+        # Calculate the position after the start marker (including newline)
+        table_start = start_pos + len(self.table_start_marker) + 1
 
         self.readme_content = (
             f"{self.readme_content[:table_start]}"
             f"{table.get_string()}\n"
-            f"{self.readme_content[table_end:]}"
+            f"{self.readme_content[end_pos:]}"
         )
 
-    def update_readme(self, charts: list):
+    def update_readme(self, charts: List[Chart]) -> None:
+        """Update the README with a table of charts.
+
+        Generates a markdown table from the provided charts and
+        replaces the content between the table markers in the README.
+
+        Args:
+            charts: List of Chart model instances to include in the table.
+
+        Raises:
+            IndexError: If table markers are not found in the README.
+        """
         table = self._generate_table(charts)
 
         self._replace_table(table)
 
         logging.info("Writing new readme...")
-        with open(self.readme_path, "w") as readme_file:
+        with open(self.readme_path, "w", encoding="utf-8") as readme_file:
             readme_file.write(self.readme_content)
