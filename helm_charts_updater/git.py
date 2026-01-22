@@ -159,7 +159,11 @@ class GitRepository:
                         stderr=sanitized_retry,
                     ) from retry_error
             else:
-                raise
+                raise GitCommandError(
+                    command="push",
+                    status=1,
+                    stderr=sanitized_error,
+                ) from error
 
     def pull_with_rebase(self) -> None:
         """Pull latest changes from the remote repository with rebase.

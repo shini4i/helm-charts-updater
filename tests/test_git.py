@@ -48,7 +48,10 @@ class TestGitRepositoryGenerateUrl:
     @patch("helm_charts_updater.git.Repo")
     @patch("os.path.exists")
     def test_generate_repo_url(
-        self, mock_exists: MagicMock, mock_repo: MagicMock, mock_config: MagicMock
+        self,
+        mock_exists: MagicMock,
+        mock_repo: MagicMock,  # noqa: ARG002
+        mock_config: MagicMock,
     ) -> None:
         """Test URL generation with token."""
         mock_config.get_github_token.return_value = "test-token"
@@ -93,7 +96,10 @@ class TestGitRepositoryClone:
     @patch("helm_charts_updater.git.Repo")
     @patch("os.path.exists")
     def test_clone_path_exists_raises_error(
-        self, mock_exists: MagicMock, mock_repo: MagicMock, mock_config: MagicMock
+        self,
+        mock_exists: MagicMock,
+        mock_repo: MagicMock,  # noqa: ARG002
+        mock_config: MagicMock,
     ) -> None:
         """Test that existing clone path raises FileExistsError."""
         mock_config.get_clone_path.return_value = "/mock/existing"

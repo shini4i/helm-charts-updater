@@ -49,37 +49,58 @@ class TestChartNamePattern:
 class TestConfig:
     """Tests for Config class."""
 
-    def test_get_github_token(self, mock_env_vars: dict) -> None:
+    def test_get_github_token(
+        self,
+        mock_env_vars: dict,  # noqa: ARG002
+    ) -> None:
         """Test that get_github_token returns correct value."""
         config = Config()
         assert config.get_github_token() == "test-token-12345"
 
-    def test_get_github_user(self, mock_env_vars: dict) -> None:
+    def test_get_github_user(
+        self,
+        mock_env_vars: dict,  # noqa: ARG002
+    ) -> None:
         """Test that get_github_user returns correct value."""
         config = Config()
         assert config.get_github_user() == "test-user"
 
-    def test_get_github_repo(self, mock_env_vars: dict) -> None:
+    def test_get_github_repo(
+        self,
+        mock_env_vars: dict,  # noqa: ARG002
+    ) -> None:
         """Test that get_github_repo returns correct value."""
         config = Config()
         assert config.get_github_repo() == "test-repo"
 
-    def test_get_clone_path(self, mock_env_vars: dict) -> None:
+    def test_get_clone_path(
+        self,
+        mock_env_vars: dict,  # noqa: ARG002
+    ) -> None:
         """Test that get_clone_path returns correct value."""
         config = Config()
         assert config.get_clone_path() == "/mock/test-clone"
 
-    def test_get_commit_author(self, mock_env_vars: dict) -> None:
+    def test_get_commit_author(
+        self,
+        mock_env_vars: dict,  # noqa: ARG002
+    ) -> None:
         """Test that get_commit_author returns correct value."""
         config = Config()
         assert config.get_commit_author() == "Test Author"
 
-    def test_get_commit_email(self, mock_env_vars: dict) -> None:
+    def test_get_commit_email(
+        self,
+        mock_env_vars: dict,  # noqa: ARG002
+    ) -> None:
         """Test that get_commit_email returns correct value."""
         config = Config()
         assert config.get_commit_email() == "test@example.com"
 
-    def test_get_chart_name_valid(self, mock_env_vars: dict) -> None:
+    def test_get_chart_name_valid(
+        self,
+        mock_env_vars: dict,  # noqa: ARG002
+    ) -> None:
         """Test that valid chart names are accepted."""
         config = Config()
         assert config.get_chart_name() == "test-chart"
@@ -98,12 +119,18 @@ class TestConfig:
             with pytest.raises(ValueError, match="Invalid chart name"):
                 config.get_chart_name()
 
-    def test_get_charts_path(self, mock_env_vars: dict) -> None:
+    def test_get_charts_path(
+        self,
+        mock_env_vars: dict,  # noqa: ARG002
+    ) -> None:
         """Test that get_charts_path returns correct value."""
         config = Config()
         assert config.get_charts_path() == "charts"
 
-    def test_get_app_version(self, mock_env_vars: dict) -> None:
+    def test_get_app_version(
+        self,
+        mock_env_vars: dict,  # noqa: ARG002
+    ) -> None:
         """Test that get_app_version returns correct value."""
         config = Config()
         assert config.get_app_version() == "1.2.3"
