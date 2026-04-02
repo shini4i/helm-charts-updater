@@ -15,6 +15,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Capture and log helm-docs stderr on failure instead of silently discarding it
 - Pin all GitHub Actions to commit SHAs for supply-chain security
 - CI workflow renamed to Quality Assurance (`qa.yml`)
+- Rebase on push-retry no longer auto-resolves conflicts with the `ours` strategy; conflicts now propagate as errors
+- Chart discovery (`get_charts_list`) now searches within `charts_path` instead of the full clone root
+- `importValues` in Dependency model now accepts both string and dict entries per the Helm spec
+
+### Fixed
+- Malformed YAML and non-mapping Chart.yaml documents now raise `ChartValidationError` instead of untyped exceptions
+- Credential sanitization in re-raised exceptions now uses `from None` to prevent leakage via implicit exception chaining
+- Docker image now installs from `poetry.lock` for reproducible builds
+- CRLF line endings in README files are now properly preserved during table replacement
 
 ## [0.4.3] - 2025-04-22
 ### Fixed

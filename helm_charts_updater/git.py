@@ -102,7 +102,7 @@ class GitRepository:
                     command="clone",
                     status=1,
                     stderr=sanitized_error,
-                )
+                ) from None
             return
         raise FileExistsError(
             f"Clone path '{self.clone_path}' already exists. "
@@ -159,7 +159,7 @@ class GitRepository:
                     logging.error("Push failed: %s", sanitized_error)
                     raise GitCommandError(
                         command="push", status=1, stderr=sanitized_error
-                    )
+                    ) from None
 
                 if attempt < MAX_PUSH_RETRIES - 1:
                     delay = RETRY_BASE_DELAY * (2**attempt)
@@ -179,7 +179,7 @@ class GitRepository:
                     )
                     raise GitCommandError(
                         command="push", status=1, stderr=sanitized_error
-                    )
+                    ) from None
 
     def pull_with_rebase(self) -> None:
         """Pull latest changes from the remote repository with rebase.
@@ -206,7 +206,7 @@ class GitRepository:
                 command="pull",
                 status=1,
                 stderr=sanitized_error,
-            )
+            ) from None
 
     def get_charts_list(self) -> list[Chart]:
         """Get a list of all top-level Helm charts in the repository.
