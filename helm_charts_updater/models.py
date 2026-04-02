@@ -6,6 +6,9 @@ Helm Chart.yaml files.
 
 from typing import Any
 
+# `semver` is used for strict version parsing and bumping (chart versions).
+# `semantic_version` (NpmSpec) is used for validating semver ranges in
+# Helm dependency version constraints (e.g., "^1.0.0", "~2.3.4", ">=1.0.0 <2.0.0").
 import semver
 from pydantic import BaseModel
 from pydantic import field_validator
