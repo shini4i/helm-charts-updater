@@ -119,7 +119,7 @@ class TestReadmeReplaceTable:
     def test_replace_table_missing_start_marker(
         self, mock_config: MagicMock, sample_readme_without_markers: str
     ) -> None:
-        """Test that missing start marker raises IndexError."""
+        """Test that missing start marker raises ValueError."""
         mock_config.get_clone_path.return_value = "/mock/repo"
 
         with patch("builtins.open", mock_open(read_data=sample_readme_without_markers)):
@@ -127,14 +127,14 @@ class TestReadmeReplaceTable:
 
         table = PrettyTable(["Name"])
 
-        with pytest.raises(IndexError) as exc_info:
+        with pytest.raises(ValueError) as exc_info:
             readme._replace_table(table)
 
         assert "table_start" in str(exc_info.value)
 
     @patch("helm_charts_updater.readme_generator.config")
     def test_replace_table_missing_end_marker(self, mock_config: MagicMock) -> None:
-        """Test that missing end marker raises IndexError."""
+        """Test that missing end marker raises ValueError."""
         mock_config.get_clone_path.return_value = "/mock/repo"
 
         readme_content = """# README
@@ -147,14 +147,14 @@ Some content
 
         table = PrettyTable(["Name"])
 
-        with pytest.raises(IndexError) as exc_info:
+        with pytest.raises(ValueError) as exc_info:
             readme._replace_table(table)
 
         assert "table_end" in str(exc_info.value)
 
     @patch("helm_charts_updater.readme_generator.config")
     def test_replace_table_markers_wrong_order(self, mock_config: MagicMock) -> None:
-        """Test that markers in wrong order raises IndexError."""
+        """Test that markers in wrong order raises ValueError."""
         mock_config.get_clone_path.return_value = "/mock/repo"
 
         readme_content = """# README
@@ -168,7 +168,7 @@ Some content
 
         table = PrettyTable(["Name"])
 
-        with pytest.raises(IndexError) as exc_info:
+        with pytest.raises(ValueError) as exc_info:
             readme._replace_table(table)
 
         # End marker before start won't be found when searching from start position

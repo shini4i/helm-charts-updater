@@ -5,10 +5,8 @@ Helm chart versions.
 """
 
 import logging
+import subprocess
 from pathlib import Path
-from subprocess import DEVNULL
-from subprocess import STDOUT
-from subprocess import check_call
 
 import semver
 from pydantic import ValidationError
@@ -126,14 +124,21 @@ class HelmChart:
         for the Helm chart.
 
         Raises:
-            CalledProcessError: If helm-docs command fails.
+            subprocess.CalledProcessError: If helm-docs command fails.
         """
         logging.info("Generating helm readme...")
 
         chart_dir = Path(self.clone_path) / self.charts_path / self.chart_name
 
-        check_call(
+        result = subprocess.run(
             ["helm-docs", "-c", str(chart_dir)],
-            stdout=DEVNULL,
-            stderr=STDOUT,
+            capture_output=True,
+            text=True,
+            check=False,
         )
+
+        if result.returncode != 0:
+            logging.error("helm-docs failed: %s", result.stderr.strip())
+            raise subprocess.CalledProcessError(
+                result.returncode, "helm-docs", output=result.stdout, stderr=result.stderr
+            )

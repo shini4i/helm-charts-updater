@@ -185,11 +185,16 @@ class GitRepository:
         """Pull latest changes from the remote repository with rebase.
 
         Uses 'ours' strategy to resolve conflicts in favor of local changes.
+        This means any conflicting remote changes will be overwritten by our
+        local changes.
 
         Raises:
             GitCommandError: If the pull with rebase fails.
         """
-        logging.info("Pulling latest changes from the remote repo with rebase...")
+        logging.warning(
+            "Pulling with rebase using 'ours' strategy — "
+            "conflicting remote changes will be overwritten by local changes"
+        )
         origin = self.local_repo.remote(name="origin")
         try:
             self.local_repo.git.pull(

@@ -85,14 +85,14 @@ class Readme:
             table: The PrettyTable to insert into the README.
 
         Raises:
-            IndexError: If start or end marker is not found in the README,
+            ValueError: If start or end marker is not found in the README,
                 or if end marker appears before start marker.
         """
         logging.info("Replacing table...")
 
         start_pos = self.readme_content.find(self.table_start_marker)
         if start_pos == -1:
-            raise IndexError(
+            raise ValueError(
                 f"Table start marker '{self.table_start_marker}' not found in README. "
                 "Please add the marker to your README.md file."
             )
@@ -100,7 +100,7 @@ class Readme:
         # Search for end marker AFTER start marker to avoid false matches
         end_pos = self.readme_content.find(self.table_end_marker, start_pos)
         if end_pos == -1:
-            raise IndexError(
+            raise ValueError(
                 f"Table end marker '{self.table_end_marker}' not found in README. "
                 "Please add the marker to your README.md file."
             )
@@ -140,7 +140,7 @@ class Readme:
             charts: List of Chart model instances to include in the table.
 
         Raises:
-            IndexError: If table markers are not found in the README.
+            ValueError: If table markers are not found in the README.
         """
         table = self._generate_table(charts)
 

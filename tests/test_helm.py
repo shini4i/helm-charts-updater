@@ -1,5 +1,6 @@
 """Tests for the HelmChart class."""
 
+import subprocess
 from pathlib import Path
 from unittest.mock import MagicMock
 from unittest.mock import mock_open
@@ -142,10 +143,10 @@ class TestHelmChartUpdateVersion:
 class TestHelmChartRunDocs:
     """Tests for HelmChart helm-docs execution."""
 
-    @patch("helm_charts_updater.helm.check_call")
+    @patch("helm_charts_updater.helm.subprocess.run")
     @patch("helm_charts_updater.helm.config")
-    def test_run_helm_docs(
-        self, mock_config: MagicMock, mock_check_call: MagicMock
+    def test_run_helm_docs_success(
+        self, mock_config: MagicMock, mock_run: MagicMock
     ) -> None:
         """Test helm-docs is called with correct arguments."""
         mock_config.get_clone_path.return_value = "/mock"
@@ -153,14 +154,40 @@ class TestHelmChartRunDocs:
         mock_config.get_chart_name.return_value = "test-chart"
         mock_config.get_app_version.return_value = "1.0.0"
 
+        mock_run.return_value = subprocess.CompletedProcess(
+            args=["helm-docs"], returncode=0, stdout="", stderr=""
+        )
+
         helm = HelmChart()
         helm.run_helm_docs()
 
-        mock_check_call.assert_called_once()
-        call_args = mock_check_call.call_args[0][0]
+        mock_run.assert_called_once()
+        call_args = mock_run.call_args[0][0]
         assert call_args[0] == "helm-docs"
         assert call_args[1] == "-c"
         assert "test-chart" in call_args[2]
+
+    @patch("helm_charts_updater.helm.subprocess.run")
+    @patch("helm_charts_updater.helm.config")
+    def test_run_helm_docs_failure_logs_stderr(
+        self, mock_config: MagicMock, mock_run: MagicMock
+    ) -> None:
+        """Test helm-docs failure raises CalledProcessError with stderr."""
+        mock_config.get_clone_path.return_value = "/mock"
+        mock_config.get_charts_path.return_value = "charts"
+        mock_config.get_chart_name.return_value = "test-chart"
+        mock_config.get_app_version.return_value = "1.0.0"
+
+        mock_run.return_value = subprocess.CompletedProcess(
+            args=["helm-docs"], returncode=1, stdout="", stderr="template error: bad syntax"
+        )
+
+        helm = HelmChart()
+        with pytest.raises(subprocess.CalledProcessError) as exc_info:
+            helm.run_helm_docs()
+
+        assert exc_info.value.returncode == 1
+        assert "bad syntax" in exc_info.value.stderr
 
 
 class TestHelmChartGetChartPath:
