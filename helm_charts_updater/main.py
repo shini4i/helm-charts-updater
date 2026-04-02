@@ -54,9 +54,18 @@ def main() -> None:
     )
 
 
-if __name__ == "__main__":
+def cli() -> None:
+    """CLI entry point that wraps main() with error handling.
+
+    Catches ChartValidationError and exits with code 1 instead of
+    showing a raw traceback.
+    """
     try:
         main()
     except ChartValidationError as err:
         logging.error("%s", err)
         sys.exit(1)
+
+
+if __name__ == "__main__":
+    cli()
