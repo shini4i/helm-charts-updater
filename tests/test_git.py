@@ -182,11 +182,16 @@ class TestGitRepositoryPush:
 
         mock_remote.push.assert_called_once()
 
+    @patch("helm_charts_updater.git.time.sleep")
     @patch("helm_charts_updater.git.config")
     @patch("helm_charts_updater.git.Repo")
     @patch.object(Path, "exists")
     def test_push_changes_retries_on_rejection(
-        self, mock_exists: MagicMock, mock_repo_class: MagicMock, mock_config: MagicMock
+        self,
+        mock_exists: MagicMock,
+        mock_repo_class: MagicMock,
+        mock_config: MagicMock,
+        mock_sleep: MagicMock,  # noqa: ARG002
     ) -> None:
         """Test push retries with rebase when updates are rejected."""
         mock_config.get_github_token.return_value = "token"
@@ -245,13 +250,18 @@ class TestGitRepositoryPush:
         assert "1.2.3" in commit_message
         mock_remote.push.assert_called_once()
 
+    @patch("helm_charts_updater.git.time.sleep")
     @patch("helm_charts_updater.git.config")
     @patch("helm_charts_updater.git.Repo")
     @patch.object(Path, "exists")
     def test_push_changes_retry_failure_sanitizes_error(
-        self, mock_exists: MagicMock, mock_repo_class: MagicMock, mock_config: MagicMock
+        self,
+        mock_exists: MagicMock,
+        mock_repo_class: MagicMock,
+        mock_config: MagicMock,
+        mock_sleep: MagicMock,  # noqa: ARG002
     ) -> None:
-        """Test that retry push failure sanitizes error message."""
+        """Test that all retries exhausted still sanitizes error message."""
         mock_config.get_github_token.return_value = "secret-token"
         mock_config.get_github_user.return_value = "user"
         mock_config.get_github_repo.return_value = "repo"
@@ -262,11 +272,10 @@ class TestGitRepositoryPush:
 
         mock_repo = MagicMock()
         mock_remote = MagicMock()
-        # First push fails with rejection, second push also fails
-        mock_remote.push.side_effect = [
-            GitCommandError("push", 1, "Updates were rejected"),
-            GitCommandError("push", 1, "https://secret-token@github.com/user/repo.git failed"),
-        ]
+        # All pushes fail with rejection (exhausts retries)
+        mock_remote.push.side_effect = GitCommandError(
+            "push", 1, "Updates were rejected https://secret-token@github.com/user/repo.git"
+        )
         mock_repo.remote.return_value = mock_remote
         mock_repo.active_branch.name = "main"
         mock_repo_class.return_value = mock_repo
@@ -278,6 +287,8 @@ class TestGitRepositoryPush:
 
         # Token should be sanitized in the raised exception
         assert "secret-token" not in str(exc_info.value)
+        # Should have exhausted all retries
+        assert mock_remote.push.call_count == 3
 
 
 class TestGitRepositoryPullWithRebase:

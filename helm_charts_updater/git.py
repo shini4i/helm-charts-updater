@@ -6,6 +6,7 @@ to a GitHub repository containing Helm charts.
 
 import logging
 import re
+import time
 from pathlib import Path
 
 from git import GitCommandError
@@ -30,11 +31,18 @@ def _sanitize_url(url: str) -> str:
     return re.sub(r"https://[^@]+@", "https://***@", url)
 
 
+# Maximum number of push attempts before giving up on rejected updates
+MAX_PUSH_RETRIES = 3
+
+# Base delay in seconds between push retries (doubles each attempt)
+RETRY_BASE_DELAY = 1.0
+
+
 class GitRepository:
     """Manages Git operations for the Helm charts repository.
 
     Handles cloning, committing, and pushing changes to the charts repository.
-    Includes automatic retry logic for push conflicts.
+    Includes automatic retry logic with exponential backoff for push conflicts.
 
     Attributes:
         clone_path: Local path where the repository is cloned.
@@ -117,8 +125,8 @@ class GitRepository:
     ) -> None:
         """Commit and push chart version changes to the remote repository.
 
-        If the push fails due to rejected updates, attempts to pull with rebase
-        and retry the push.
+        If the push fails due to rejected updates, retries with pull-rebase
+        up to MAX_PUSH_RETRIES times with exponential backoff.
 
         Args:
             chart_version: The new chart version.
@@ -127,7 +135,8 @@ class GitRepository:
             old_version: The previous application version, or None if not set.
 
         Raises:
-            GitCommandError: If push fails for reasons other than rejected updates.
+            GitCommandError: If push fails after all retries or for
+                non-rejection errors.
         """
         logging.info("Committing changes...")
         old_ver_display = old_version if old_version else "N/A"
@@ -139,30 +148,38 @@ class GitRepository:
         self._commit_changes(commit_message)
         origin = self.local_repo.remote(name="origin")
 
-        try:
-            origin.push()
-        except GitCommandError as error:
-            sanitized_error = _sanitize_url(str(error))
-            logging.error("Failed to push changes: %s", sanitized_error)
-            if "Updates were rejected" in str(error):
-                logging.info("Pulling changes with rebase and retrying push...")
-                self.pull_with_rebase()
-                try:
-                    origin.push()
-                except GitCommandError as retry_error:
-                    sanitized_retry = _sanitize_url(str(retry_error))
-                    logging.error("Retry push also failed: %s", sanitized_retry)
+        for attempt in range(MAX_PUSH_RETRIES):
+            try:
+                origin.push()
+                return
+            except GitCommandError as error:
+                sanitized_error = _sanitize_url(str(error))
+
+                if "Updates were rejected" not in str(error):
+                    logging.error("Push failed: %s", sanitized_error)
                     raise GitCommandError(
-                        command="push",
-                        status=1,
-                        stderr=sanitized_retry,
-                    ) from retry_error
-            else:
-                raise GitCommandError(
-                    command="push",
-                    status=1,
-                    stderr=sanitized_error,
-                ) from error
+                        command="push", status=1, stderr=sanitized_error
+                    ) from error
+
+                if attempt < MAX_PUSH_RETRIES - 1:
+                    delay = RETRY_BASE_DELAY * (2**attempt)
+                    logging.warning(
+                        "Push rejected (attempt %d/%d), retrying in %.0fs...",
+                        attempt + 1,
+                        MAX_PUSH_RETRIES,
+                        delay,
+                    )
+                    time.sleep(delay)
+                    self.pull_with_rebase()
+                else:
+                    logging.error(
+                        "Push failed after %d attempts: %s",
+                        MAX_PUSH_RETRIES,
+                        sanitized_error,
+                    )
+                    raise GitCommandError(
+                        command="push", status=1, stderr=sanitized_error
+                    ) from error
 
     def pull_with_rebase(self) -> None:
         """Pull latest changes from the remote repository with rebase.
