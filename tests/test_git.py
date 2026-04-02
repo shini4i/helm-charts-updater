@@ -402,6 +402,7 @@ class TestGitRepositoryGetChartsList:
         mock_config.get_github_user.return_value = "user"
         mock_config.get_github_repo.return_value = "repo"
         mock_config.get_clone_path.return_value = str(tmp_path)
+        mock_config.get_charts_path.return_value = "."
         mock_config.get_commit_author.return_value = "Author"
         mock_config.get_commit_email.return_value = "author@test.com"
         mock_exists.return_value = False
@@ -444,6 +445,7 @@ appVersion: "1.0.0"
         mock_config.get_github_user.return_value = "user"
         mock_config.get_github_repo.return_value = "repo"
         mock_config.get_clone_path.return_value = str(tmp_path)
+        mock_config.get_charts_path.return_value = "."
         mock_config.get_commit_author.return_value = "Author"
         mock_config.get_commit_email.return_value = "author@test.com"
         mock_exists.return_value = False
@@ -497,6 +499,7 @@ version: 2.0.0
         mock_config.get_github_user.return_value = "user"
         mock_config.get_github_repo.return_value = "repo"
         mock_config.get_clone_path.return_value = str(tmp_path)
+        mock_config.get_charts_path.return_value = "charts"
         mock_config.get_commit_author.return_value = "Author"
         mock_config.get_commit_email.return_value = "author@test.com"
         mock_exists.return_value = False
@@ -550,6 +553,7 @@ version: 6.0.0
         mock_config.get_github_user.return_value = "user"
         mock_config.get_github_repo.return_value = "repo"
         mock_config.get_clone_path.return_value = str(tmp_path)
+        mock_config.get_charts_path.return_value = "."
         mock_config.get_commit_author.return_value = "Author"
         mock_config.get_commit_email.return_value = "author@test.com"
         mock_exists.return_value = False
@@ -577,6 +581,7 @@ version: 6.0.0
         mock_config.get_github_user.return_value = "user"
         mock_config.get_github_repo.return_value = "repo"
         mock_config.get_clone_path.return_value = str(tmp_path)
+        mock_config.get_charts_path.return_value = "."
         mock_config.get_commit_author.return_value = "Author"
         mock_config.get_commit_email.return_value = "author@test.com"
         mock_exists.return_value = False

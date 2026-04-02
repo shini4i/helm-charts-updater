@@ -102,7 +102,7 @@ class GitRepository:
                     command="clone",
                     status=1,
                     stderr=sanitized_error,
-                ) from e
+                )
             return
         raise FileExistsError(
             f"Clone path '{self.clone_path}' already exists. "
@@ -159,7 +159,7 @@ class GitRepository:
                     logging.error("Push failed: %s", sanitized_error)
                     raise GitCommandError(
                         command="push", status=1, stderr=sanitized_error
-                    ) from error
+                    )
 
                 if attempt < MAX_PUSH_RETRIES - 1:
                     delay = RETRY_BASE_DELAY * (2**attempt)
@@ -179,45 +179,41 @@ class GitRepository:
                     )
                     raise GitCommandError(
                         command="push", status=1, stderr=sanitized_error
-                    ) from error
+                    )
 
     def pull_with_rebase(self) -> None:
         """Pull latest changes from the remote repository with rebase.
 
-        Uses 'ours' strategy to resolve conflicts in favor of local changes.
-        This means any conflicting remote changes will be overwritten by our
-        local changes.
+        Performs a standard rebase without auto-resolution strategies.
+        If there are conflicts, the rebase will fail and the error is
+        propagated so the caller can handle it.
 
         Raises:
-            GitCommandError: If the pull with rebase fails.
+            GitCommandError: If the pull with rebase fails (e.g., due to conflicts).
         """
-        logging.warning(
-            "Pulling with rebase using 'ours' strategy — "
-            "conflicting remote changes will be overwritten by local changes"
-        )
+        logging.warning("Pulling latest changes with rebase before retrying push...")
         origin = self.local_repo.remote(name="origin")
         try:
             self.local_repo.git.pull(
                 origin,
                 self.local_repo.active_branch.name,
-                strategy_option="ours",
                 rebase=True,
             )
         except GitCommandError as e:
             sanitized_error = _sanitize_url(str(e))
-            logging.error("Error while pulling with rebase: %s", sanitized_error)
+            logging.error("Rebase failed (likely a conflict): %s", sanitized_error)
             raise GitCommandError(
                 command="pull",
                 status=1,
                 stderr=sanitized_error,
-            ) from e
+            )
 
     def get_charts_list(self) -> list[Chart]:
         """Get a list of all top-level Helm charts in the repository.
 
-        Searches for Chart.yaml files and filters out dependency charts
-        by checking if 'charts' appears in the relative path (indicating
-        it's inside a dependency charts/ directory).
+        Searches within the configured charts_path for Chart.yaml files and
+        filters out vendored dependency charts by checking if 'charts' appears
+        in the relative path (indicating it's inside a dependency charts/ directory).
 
         Returns:
             A list of Chart model instances for each discovered chart.
@@ -228,20 +224,17 @@ class GitRepository:
         logging.info("Getting charts list...")
 
         charts: list[Chart] = []
-        clone_path = Path(self.clone_path)
+        charts_root = Path(self.clone_path) / config.get_charts_path()
 
-        for chart_path in clone_path.rglob("Chart.yaml"):
-            # Filter out dependency charts by checking if 'charts' appears
-            # in the relative path (dependency charts are in charts/ subdirs)
+        for chart_path in charts_root.rglob("Chart.yaml"):
             try:
-                rel_path = chart_path.relative_to(clone_path)
+                rel_path = chart_path.relative_to(charts_root)
             except ValueError:
                 continue
 
-            # Skip dependency charts: 'charts' appearing after the first path component
-            # indicates a vendored dependency (e.g., my-chart/charts/redis/Chart.yaml)
-            # but allow top-level charts/ directory (e.g., charts/my-chart/Chart.yaml)
-            if "charts" in rel_path.parts[1:]:
+            # Skip vendored dependency charts: 'charts' in the relative path
+            # indicates a nested dependency (e.g., my-chart/charts/redis/Chart.yaml)
+            if "charts" in rel_path.parts:
                 continue
 
             with open(chart_path, encoding="utf-8") as file:

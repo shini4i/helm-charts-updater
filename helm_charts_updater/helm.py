@@ -11,6 +11,7 @@ from pathlib import Path
 import semver
 from pydantic import ValidationError
 from ruamel.yaml import YAML
+from ruamel.yaml import YAMLError
 from ruamel.yaml.scalarstring import LiteralScalarString
 
 from helm_charts_updater import config
@@ -63,8 +64,19 @@ class HelmChart:
             chart_content = f.read()
 
         try:
-            return Chart(**yaml.load(chart_content))
-        except ValidationError as err:
+            data = yaml.load(chart_content)
+        except YAMLError as err:
+            raise ChartValidationError(str(chart_path), str(err)) from err
+
+        if not isinstance(data, dict):
+            raise ChartValidationError(
+                str(chart_path),
+                f"Expected a YAML mapping, got {type(data).__name__}",
+            )
+
+        try:
+            return Chart(**data)
+        except (ValidationError, TypeError) as err:
             raise ChartValidationError(str(chart_path), str(err)) from err
 
     def update_chart_version(self) -> tuple[str, str | None]:

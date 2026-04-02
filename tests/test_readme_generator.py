@@ -197,14 +197,16 @@ Some content
 
         readme._replace_table(table)
 
-        # Verify markers are preserved
-        assert "<!-- table_start -->" in readme.readme_content
-        assert "<!-- table_end -->" in readme.readme_content
+        content = readme.readme_content
+
+        # Verify CRLF sequences are preserved throughout
+        assert "# README\r\n" in content
+        assert "<!-- table_start -->\r\n" in content
+        assert "\r\n<!-- table_end -->" in content
+        assert "## Footer\r\n" in content
+
         # Verify new content is present
-        assert "test-chart" in readme.readme_content
-        # Verify surrounding content is preserved
-        assert "# README" in readme.readme_content
-        assert "## Footer" in readme.readme_content
+        assert "test-chart" in content
 
     @patch("helm_charts_updater.readme_generator.config")
     def test_replace_table_no_newline_after_marker(self, mock_config: MagicMock) -> None:

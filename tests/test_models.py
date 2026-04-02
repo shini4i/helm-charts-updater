@@ -62,6 +62,33 @@ class TestDependency:
         assert dep.version == "1.0.0"
         assert dep.repository is None
 
+    def test_dependency_import_values_with_strings(self) -> None:
+        """Test dependency with string importValues."""
+        dep = Dependency(name="redis", version="1.0.0", importValues=["data"])
+        assert dep.importValues == ["data"]
+
+    def test_dependency_import_values_with_dicts(self) -> None:
+        """Test dependency with dict importValues (child/parent mapping)."""
+        dep = Dependency(
+            name="redis",
+            version="1.0.0",
+            importValues=[{"child": "redis.config", "parent": "config"}],
+        )
+        assert dep.importValues is not None
+        assert dep.importValues[0] == {"child": "redis.config", "parent": "config"}
+
+    def test_dependency_import_values_mixed(self) -> None:
+        """Test dependency with mixed string and dict importValues."""
+        dep = Dependency(
+            name="redis",
+            version="1.0.0",
+            importValues=["simple", {"child": "a", "parent": "b"}],
+        )
+        assert dep.importValues is not None
+        assert len(dep.importValues) == 2
+        assert dep.importValues[0] == "simple"
+        assert dep.importValues[1] == {"child": "a", "parent": "b"}
+
     def test_invalid_dependency_version_rejected(self) -> None:
         """Test that invalid dependency versions are rejected."""
         with pytest.raises(ValidationError) as exc_info:

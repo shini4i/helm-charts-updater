@@ -44,7 +44,7 @@ class Readme:
         Raises:
             FileNotFoundError: If the README file does not exist.
         """
-        with open(self.readme_path, "r", encoding="utf-8") as readme_file:
+        with open(self.readme_path, "r", encoding="utf-8", newline="") as readme_file:
             return readme_file.read()
 
     @staticmethod
@@ -147,5 +147,5 @@ class Readme:
         self._replace_table(table)
 
         logging.info("Writing new readme...")
-        with open(self.readme_path, "w", encoding="utf-8") as readme_file:
+        with open(self.readme_path, "w", encoding="utf-8", newline="") as readme_file:
             readme_file.write(self.readme_content)

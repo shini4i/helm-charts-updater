@@ -47,7 +47,7 @@ class Dependency(BaseModel):
     repository: str | None = None
     condition: str | None = None
     tags: list[str] | None = None
-    importValues: list[str] | None = None
+    importValues: list[str | dict[str, str]] | None = None
     alias: str | None = None
 
     @field_validator("version", mode="before")

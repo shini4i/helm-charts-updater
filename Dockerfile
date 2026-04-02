@@ -23,10 +23,13 @@ RUN groupadd --gid 1000 appuser && \
 
 WORKDIR /app
 
-COPY pyproject.toml README.md ./
+COPY pyproject.toml poetry.lock README.md ./
 COPY helm_charts_updater/ ./helm_charts_updater/
 
-RUN pip install --no-cache-dir . && \
+RUN pip install --no-cache-dir poetry && \
+    poetry config virtualenvs.create false && \
+    poetry install --only main --no-interaction && \
+    pip uninstall -y poetry && \
     chmod -R a-w helm_charts_updater/ && \
     chown -R appuser:appuser .
 

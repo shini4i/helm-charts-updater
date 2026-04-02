@@ -79,6 +79,53 @@ version: invalid-version
             assert "test-chart" in str(exc_info.value)
             assert "not a valid semantic version" in exc_info.value.detail
 
+    @patch("helm_charts_updater.helm.config")
+    def test_parse_charts_yaml_malformed_yaml(self, mock_config: MagicMock) -> None:
+        """Test that malformed YAML raises ChartValidationError."""
+        mock_config.get_clone_path.return_value = "/mock"
+        mock_config.get_charts_path.return_value = "charts"
+        mock_config.get_chart_name.return_value = "test-chart"
+        mock_config.get_app_version.return_value = "1.0.0"
+
+        malformed_yaml = "name: test\n  bad-indent: [unclosed"
+
+        with patch("builtins.open", mock_open(read_data=malformed_yaml)):
+            helm = HelmChart()
+            with pytest.raises(ChartValidationError):
+                helm.parse_charts_yaml()
+
+    @patch("helm_charts_updater.helm.config")
+    def test_parse_charts_yaml_empty_file(self, mock_config: MagicMock) -> None:
+        """Test that empty file raises ChartValidationError."""
+        mock_config.get_clone_path.return_value = "/mock"
+        mock_config.get_charts_path.return_value = "charts"
+        mock_config.get_chart_name.return_value = "test-chart"
+        mock_config.get_app_version.return_value = "1.0.0"
+
+        with patch("builtins.open", mock_open(read_data="")):
+            helm = HelmChart()
+            with pytest.raises(ChartValidationError) as exc_info:
+                helm.parse_charts_yaml()
+
+            assert "NoneType" in exc_info.value.detail
+
+    @patch("helm_charts_updater.helm.config")
+    def test_parse_charts_yaml_non_mapping(self, mock_config: MagicMock) -> None:
+        """Test that non-mapping YAML (e.g., a list) raises ChartValidationError."""
+        mock_config.get_clone_path.return_value = "/mock"
+        mock_config.get_charts_path.return_value = "charts"
+        mock_config.get_chart_name.return_value = "test-chart"
+        mock_config.get_app_version.return_value = "1.0.0"
+
+        list_yaml = "- item1\n- item2\n"
+
+        with patch("builtins.open", mock_open(read_data=list_yaml)):
+            helm = HelmChart()
+            with pytest.raises(ChartValidationError) as exc_info:
+                helm.parse_charts_yaml()
+
+            assert "Expected a YAML mapping" in exc_info.value.detail
+
 
 class TestHelmChartUpdateVersion:
     """Tests for HelmChart version update."""
