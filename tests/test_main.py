@@ -3,6 +3,10 @@
 from unittest.mock import MagicMock
 from unittest.mock import patch
 
+import pytest
+
+from helm_charts_updater.exceptions import ChartValidationError
+from helm_charts_updater.exceptions import NoUpdateNeededError
 from helm_charts_updater.main import main
 
 
@@ -158,3 +162,81 @@ class TestMain:
         mock_readme_class.assert_called_once()
         mock_readme.update_readme.assert_called_once()
         mock_repo.push_changes.assert_called_once()
+
+    @patch("helm_charts_updater.main.HelmChart")
+    @patch("helm_charts_updater.main.GitRepository")
+    @patch("helm_charts_updater.main.config")
+    def test_main_no_update_needed_returns_cleanly(
+        self,
+        mock_config: MagicMock,  # noqa: ARG002
+        mock_git_repo_class: MagicMock,
+        mock_helm_chart_class: MagicMock,
+    ) -> None:
+        """Test that NoUpdateNeededError causes a clean return without push."""
+        mock_repo = MagicMock()
+        mock_git_repo_class.return_value = mock_repo
+
+        mock_chart = MagicMock()
+        mock_chart.update_chart_version.side_effect = NoUpdateNeededError("already up to date")
+        mock_helm_chart_class.return_value = mock_chart
+
+        main()
+
+        # Should NOT push changes
+        mock_repo.push_changes.assert_not_called()
+
+    @patch("helm_charts_updater.main.HelmChart")
+    @patch("helm_charts_updater.main.GitRepository")
+    @patch("helm_charts_updater.main.config")
+    def test_main_chart_validation_error_propagates(
+        self,
+        mock_config: MagicMock,  # noqa: ARG002
+        mock_git_repo_class: MagicMock,
+        mock_helm_chart_class: MagicMock,
+    ) -> None:
+        """Test that ChartValidationError propagates from main()."""
+        mock_repo = MagicMock()
+        mock_git_repo_class.return_value = mock_repo
+
+        mock_chart = MagicMock()
+        mock_chart.update_chart_version.side_effect = ChartValidationError(
+            "/path/Chart.yaml", "invalid version"
+        )
+        mock_helm_chart_class.return_value = mock_chart
+
+        with pytest.raises(ChartValidationError):
+            main()
+
+        mock_repo.push_changes.assert_not_called()
+
+    @patch("helm_charts_updater.main.Readme")
+    @patch("helm_charts_updater.main.HelmChart")
+    @patch("helm_charts_updater.main.GitRepository")
+    @patch("helm_charts_updater.main.config")
+    def test_main_chart_validation_error_during_readme_update(
+        self,
+        mock_config: MagicMock,
+        mock_git_repo_class: MagicMock,
+        mock_helm_chart_class: MagicMock,
+        mock_readme_class: MagicMock,  # noqa: ARG002
+    ) -> None:
+        """Test that ChartValidationError from get_charts_list propagates."""
+        mock_config.generate_docs.return_value = False
+        mock_config.update_readme.return_value = True
+
+        mock_repo = MagicMock()
+        mock_repo.get_charts_list.side_effect = ChartValidationError(
+            "/path/Chart.yaml", "missing required field"
+        )
+        mock_git_repo_class.return_value = mock_repo
+
+        mock_chart = MagicMock()
+        mock_chart.update_chart_version.return_value = ("1.0.1", "1.0.0")
+        mock_chart.chart_name = "test-chart"
+        mock_chart.app_version = "2.0.0"
+        mock_helm_chart_class.return_value = mock_chart
+
+        with pytest.raises(ChartValidationError):
+            main()
+
+        mock_repo.push_changes.assert_not_called()

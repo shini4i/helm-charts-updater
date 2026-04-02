@@ -7,6 +7,7 @@ from unittest.mock import patch
 import pytest
 from git import GitCommandError
 
+from helm_charts_updater.exceptions import ChartValidationError
 from helm_charts_updater.git import GitRepository
 from helm_charts_updater.git import _sanitize_url
 
@@ -45,29 +46,41 @@ class TestGitRepositoryGenerateUrl:
     """Tests for GitRepository URL generation."""
 
     @patch("helm_charts_updater.git.config")
-    @patch("helm_charts_updater.git.Repo")
-    @patch("os.path.exists")
-    def test_generate_repo_url(
-        self,
-        mock_exists: MagicMock,
-        mock_repo: MagicMock,  # noqa: ARG002
-        mock_config: MagicMock,
-    ) -> None:
+    def test_generate_repo_url(self, mock_config: MagicMock) -> None:
         """Test URL generation with token."""
         mock_config.get_github_token.return_value = "test-token"
         mock_config.get_github_user.return_value = "test-user"
         mock_config.get_github_repo.return_value = "test-repo"
+
+        url = GitRepository._generate_repo_url()
+
+        assert "test-token" in url
+        assert "test-user" in url
+        assert "test-repo" in url
+        assert url == "https://test-token@github.com/test-user/test-repo.git"
+
+    @patch("helm_charts_updater.git.config")
+    @patch("helm_charts_updater.git.Repo")
+    @patch.object(Path, "exists", return_value=False)
+    def test_token_not_stored_as_attribute(
+        self,
+        mock_exists: MagicMock,  # noqa: ARG002
+        mock_repo: MagicMock,  # noqa: ARG002
+        mock_config: MagicMock,
+    ) -> None:
+        """Test that the token URL is not stored as an instance attribute."""
+        mock_config.get_github_token.return_value = "secret-token"
+        mock_config.get_github_user.return_value = "user"
+        mock_config.get_github_repo.return_value = "repo"
         mock_config.get_clone_path.return_value = "/mock/clone"
         mock_config.get_commit_author.return_value = "Author"
         mock_config.get_commit_email.return_value = "author@test.com"
-        mock_exists.return_value = False
 
-        repo = GitRepository()
+        git_repo = GitRepository()
 
-        assert "test-token" in repo.repo
-        assert "test-user" in repo.repo
-        assert "test-repo" in repo.repo
-        assert repo.repo == "https://test-token@github.com/test-user/test-repo.git"
+        # Token should not be stored in any instance attribute
+        for attr_value in vars(git_repo).values():
+            assert "secret-token" not in str(attr_value)
 
 
 class TestGitRepositoryClone:
@@ -75,7 +88,7 @@ class TestGitRepositoryClone:
 
     @patch("helm_charts_updater.git.config")
     @patch("helm_charts_updater.git.Repo")
-    @patch("os.path.exists")
+    @patch.object(Path, "exists")
     def test_clone_success(
         self, mock_exists: MagicMock, mock_repo: MagicMock, mock_config: MagicMock
     ) -> None:
@@ -94,7 +107,7 @@ class TestGitRepositoryClone:
 
     @patch("helm_charts_updater.git.config")
     @patch("helm_charts_updater.git.Repo")
-    @patch("os.path.exists")
+    @patch.object(Path, "exists")
     def test_clone_path_exists_raises_error(
         self,
         mock_exists: MagicMock,
@@ -117,7 +130,7 @@ class TestGitRepositoryClone:
 
     @patch("helm_charts_updater.git.config")
     @patch("helm_charts_updater.git.Repo")
-    @patch("os.path.exists")
+    @patch.object(Path, "exists")
     def test_clone_failure_sanitizes_error(
         self, mock_exists: MagicMock, mock_repo: MagicMock, mock_config: MagicMock
     ) -> None:
@@ -146,7 +159,7 @@ class TestGitRepositoryPush:
 
     @patch("helm_charts_updater.git.config")
     @patch("helm_charts_updater.git.Repo")
-    @patch("os.path.exists")
+    @patch.object(Path, "exists")
     def test_push_changes_success(
         self, mock_exists: MagicMock, mock_repo_class: MagicMock, mock_config: MagicMock
     ) -> None:
@@ -171,7 +184,7 @@ class TestGitRepositoryPush:
 
     @patch("helm_charts_updater.git.config")
     @patch("helm_charts_updater.git.Repo")
-    @patch("os.path.exists")
+    @patch.object(Path, "exists")
     def test_push_changes_retries_on_rejection(
         self, mock_exists: MagicMock, mock_repo_class: MagicMock, mock_config: MagicMock
     ) -> None:
@@ -204,7 +217,7 @@ class TestGitRepositoryPush:
 
     @patch("helm_charts_updater.git.config")
     @patch("helm_charts_updater.git.Repo")
-    @patch("os.path.exists")
+    @patch.object(Path, "exists")
     def test_push_changes_with_none_old_version(
         self, mock_exists: MagicMock, mock_repo_class: MagicMock, mock_config: MagicMock
     ) -> None:
@@ -234,7 +247,7 @@ class TestGitRepositoryPush:
 
     @patch("helm_charts_updater.git.config")
     @patch("helm_charts_updater.git.Repo")
-    @patch("os.path.exists")
+    @patch.object(Path, "exists")
     def test_push_changes_retry_failure_sanitizes_error(
         self, mock_exists: MagicMock, mock_repo_class: MagicMock, mock_config: MagicMock
     ) -> None:
@@ -272,7 +285,7 @@ class TestGitRepositoryPullWithRebase:
 
     @patch("helm_charts_updater.git.config")
     @patch("helm_charts_updater.git.Repo")
-    @patch("os.path.exists")
+    @patch.object(Path, "exists")
     def test_pull_with_rebase_success(
         self, mock_exists: MagicMock, mock_repo_class: MagicMock, mock_config: MagicMock
     ) -> None:
@@ -296,7 +309,7 @@ class TestGitRepositoryPullWithRebase:
 
     @patch("helm_charts_updater.git.config")
     @patch("helm_charts_updater.git.Repo")
-    @patch("os.path.exists")
+    @patch.object(Path, "exists")
     def test_pull_with_rebase_failure_reraises(
         self, mock_exists: MagicMock, mock_repo_class: MagicMock, mock_config: MagicMock
     ) -> None:
@@ -325,7 +338,7 @@ class TestGitRepositoryPushNonRejectionError:
 
     @patch("helm_charts_updater.git.config")
     @patch("helm_charts_updater.git.Repo")
-    @patch("os.path.exists")
+    @patch.object(Path, "exists")
     def test_push_changes_reraises_non_rejection_error(
         self, mock_exists: MagicMock, mock_repo_class: MagicMock, mock_config: MagicMock
     ) -> None:
@@ -365,7 +378,7 @@ class TestGitRepositoryGetChartsList:
 
     @patch("helm_charts_updater.git.config")
     @patch("helm_charts_updater.git.Repo")
-    @patch("os.path.exists")
+    @patch.object(Path, "exists")
     def test_get_charts_list_finds_top_level_charts(
         self,
         mock_exists: MagicMock,
@@ -407,7 +420,7 @@ appVersion: "1.0.0"
 
     @patch("helm_charts_updater.git.config")
     @patch("helm_charts_updater.git.Repo")
-    @patch("os.path.exists")
+    @patch.object(Path, "exists")
     def test_get_charts_list_filters_dependency_charts(
         self,
         mock_exists: MagicMock,
@@ -460,7 +473,7 @@ version: 2.0.0
 
     @patch("helm_charts_updater.git.config")
     @patch("helm_charts_updater.git.Repo")
-    @patch("os.path.exists")
+    @patch.object(Path, "exists")
     def test_get_charts_list_includes_top_level_charts_directory(
         self,
         mock_exists: MagicMock,
@@ -513,7 +526,7 @@ version: 6.0.0
 
     @patch("helm_charts_updater.git.config")
     @patch("helm_charts_updater.git.Repo")
-    @patch("os.path.exists")
+    @patch.object(Path, "exists")
     def test_get_charts_list_empty_directory(
         self,
         mock_exists: MagicMock,
@@ -540,15 +553,15 @@ version: 6.0.0
 
     @patch("helm_charts_updater.git.config")
     @patch("helm_charts_updater.git.Repo")
-    @patch("os.path.exists")
-    def test_get_charts_list_invalid_chart_exits(
+    @patch.object(Path, "exists")
+    def test_get_charts_list_invalid_chart_raises_validation_error(
         self,
         mock_exists: MagicMock,
         mock_repo_class: MagicMock,
         mock_config: MagicMock,
         tmp_path: Path,
     ) -> None:
-        """Test that invalid Chart.yaml causes system exit."""
+        """Test that invalid Chart.yaml raises ChartValidationError."""
         mock_config.get_github_token.return_value = "token"
         mock_config.get_github_user.return_value = "user"
         mock_config.get_github_repo.return_value = "repo"
@@ -573,7 +586,7 @@ name: invalid-chart
 
         git_repo = GitRepository()
 
-        with pytest.raises(SystemExit) as exc_info:
+        with pytest.raises(ChartValidationError) as exc_info:
             git_repo.get_charts_list()
 
-        assert exc_info.value.code == 1
+        assert "invalid-chart" in str(exc_info.value)

@@ -4,7 +4,12 @@ This module provides the main function that orchestrates the helm chart
 update workflow.
 """
 
+import logging
+import sys
+
 from helm_charts_updater import config
+from helm_charts_updater.exceptions import ChartValidationError
+from helm_charts_updater.exceptions import NoUpdateNeededError
 from helm_charts_updater.git import GitRepository
 from helm_charts_updater.helm import HelmChart
 from helm_charts_updater.readme_generator import Readme
@@ -19,11 +24,20 @@ def main() -> None:
     3. Optionally generate helm-docs documentation
     4. Optionally update the README with a charts table
     5. Commit and push the changes
+
+    Raises:
+        NoUpdateNeededError: If the chart already has the desired appVersion.
+        ChartValidationError: If a Chart.yaml file fails validation.
     """
     repo = GitRepository()
 
     chart = HelmChart()
-    chart_version, old_version = chart.update_chart_version()
+
+    try:
+        chart_version, old_version = chart.update_chart_version()
+    except NoUpdateNeededError:
+        logging.info("No update needed. Exiting.")
+        return
 
     if config.generate_docs():
         chart.run_helm_docs()
@@ -41,4 +55,8 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except ChartValidationError as err:
+        logging.error("%s", err)
+        sys.exit(1)

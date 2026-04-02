@@ -5,9 +5,7 @@ to a GitHub repository containing Helm charts.
 """
 
 import logging
-import os
 import re
-import sys
 from pathlib import Path
 
 from git import GitCommandError
@@ -16,6 +14,7 @@ from pydantic import ValidationError
 from ruamel.yaml import YAML
 
 from helm_charts_updater import config
+from helm_charts_updater.exceptions import ChartValidationError
 from helm_charts_updater.models import Chart
 
 
@@ -38,7 +37,6 @@ class GitRepository:
     Includes automatic retry logic for push conflicts.
 
     Attributes:
-        repo: The repository URL (with credentials).
         clone_path: Local path where the repository is cloned.
         commit_author: Git commit author name.
         committer_email: Git commit author email.
@@ -53,7 +51,6 @@ class GitRepository:
             FileExistsError: If the clone path already exists.
             GitCommandError: If cloning fails.
         """
-        self.repo = self._generate_repo_url()
         self.clone_path = config.get_clone_path()
 
         self.commit_author = config.get_commit_author()
@@ -84,10 +81,12 @@ class GitRepository:
             FileExistsError: If the clone path already exists.
             GitCommandError: If cloning fails (with sanitized error message).
         """
-        if not os.path.exists(self.clone_path):
+        clone_path = Path(self.clone_path)
+        if not clone_path.exists():
+            repo_url = self._generate_repo_url()
             logging.info("Cloning helm charts repository to %s...", self.clone_path)
             try:
-                Repo.clone_from(self.repo, self.clone_path)
+                Repo.clone_from(repo_url, self.clone_path)
             except GitCommandError as e:
                 sanitized_error = _sanitize_url(str(e))
                 logging.error("Failed to clone repository: %s", sanitized_error)
@@ -202,7 +201,7 @@ class GitRepository:
             A list of Chart model instances for each discovered chart.
 
         Raises:
-            SystemExit: If a Chart.yaml file fails validation.
+            ChartValidationError: If a Chart.yaml file fails validation.
         """
         logging.info("Getting charts list...")
 
@@ -227,7 +226,6 @@ class GitRepository:
                 try:
                     charts.append(Chart(**self.yaml.load(file)))
                 except ValidationError as err:
-                    logging.error("Failed to parse %s: %s", chart_path, err)
-                    sys.exit(1)
+                    raise ChartValidationError(str(chart_path), str(err)) from err
 
         return charts

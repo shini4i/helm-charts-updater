@@ -5,14 +5,10 @@ Helm chart versions.
 """
 
 import logging
-import sys
 from pathlib import Path
 from subprocess import DEVNULL
 from subprocess import STDOUT
-from subprocess import CalledProcessError
 from subprocess import check_call
-from typing import Optional
-from typing import Tuple
 
 import semver
 from pydantic import ValidationError
@@ -20,6 +16,8 @@ from ruamel.yaml import YAML
 from ruamel.yaml.scalarstring import LiteralScalarString
 
 from helm_charts_updater import config
+from helm_charts_updater.exceptions import ChartValidationError
+from helm_charts_updater.exceptions import NoUpdateNeededError
 from helm_charts_updater.models import Chart
 
 
@@ -57,7 +55,7 @@ class HelmChart:
             A Chart model instance populated from the Chart.yaml file.
 
         Raises:
-            SystemExit: If the Chart.yaml file fails validation.
+            ChartValidationError: If the Chart.yaml file fails validation.
         """
         logging.info("Parsing %s's Chart.yaml...", self.chart_name)
         yaml = YAML(typ="rt")
@@ -69,10 +67,9 @@ class HelmChart:
         try:
             return Chart(**yaml.load(chart_content))
         except ValidationError as err:
-            logging.error("Failed to parse Chart.yaml: %s", err)
-            sys.exit(1)
+            raise ChartValidationError(str(chart_path), str(err)) from err
 
-    def update_chart_version(self) -> Tuple[str, Optional[str]]:
+    def update_chart_version(self) -> tuple[str, str | None]:
         """Update the chart version and appVersion in Chart.yaml.
 
         Bumps the patch version of the chart and updates the appVersion
@@ -84,7 +81,8 @@ class HelmChart:
             may be None if the chart has no appVersion set.
 
         Raises:
-            SystemExit: If no update is needed (versions are the same).
+            NoUpdateNeededError: If the appVersion is already up to date.
+            ChartValidationError: If the Chart.yaml file fails validation.
         """
         chart = self.parse_charts_yaml()
 
@@ -93,10 +91,10 @@ class HelmChart:
         old_app_version = chart.appVersion
 
         if app_version == old_app_version:
-            logging.info(
-                "No need to update %s chart version. Skipping...", self.chart_name
+            raise NoUpdateNeededError(
+                f"No need to update {self.chart_name} chart version — "
+                f"appVersion is already {app_version}"
             )
-            sys.exit(0)
 
         if config.update_chart_annotations():
             if chart.annotations is None:
@@ -111,7 +109,7 @@ class HelmChart:
         chart.version = chart_version  # Use already computed value
 
         logging.info("Bumping app version from %s to %s", chart.appVersion, app_version)
-        chart.appVersion = self.app_version
+        chart.appVersion = app_version
 
         yaml = YAML(typ="rt")
 

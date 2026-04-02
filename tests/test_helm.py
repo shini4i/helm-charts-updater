@@ -7,6 +7,8 @@ from unittest.mock import patch
 
 import pytest
 
+from helm_charts_updater.exceptions import ChartValidationError
+from helm_charts_updater.exceptions import NoUpdateNeededError
 from helm_charts_updater.helm import HelmChart
 from helm_charts_updater.models import Chart
 
@@ -53,8 +55,10 @@ class TestHelmChartParseYaml:
             assert chart.appVersion == "1.0.0"
 
     @patch("helm_charts_updater.helm.config")
-    def test_parse_charts_yaml_invalid_exits(self, mock_config: MagicMock) -> None:
-        """Test that invalid Chart.yaml causes sys.exit."""
+    def test_parse_charts_yaml_invalid_raises_validation_error(
+        self, mock_config: MagicMock
+    ) -> None:
+        """Test that invalid Chart.yaml raises ChartValidationError."""
         mock_config.get_clone_path.return_value = "/mock"
         mock_config.get_charts_path.return_value = "charts"
         mock_config.get_chart_name.return_value = "test-chart"
@@ -68,20 +72,21 @@ version: invalid-version
 
         with patch("builtins.open", mock_open(read_data=invalid_yaml)):
             helm = HelmChart()
-            with pytest.raises(SystemExit) as exc_info:
+            with pytest.raises(ChartValidationError) as exc_info:
                 helm.parse_charts_yaml()
 
-            assert exc_info.value.code == 1
+            assert "test-chart" in str(exc_info.value)
+            assert "not a valid semantic version" in exc_info.value.detail
 
 
 class TestHelmChartUpdateVersion:
     """Tests for HelmChart version update."""
 
     @patch("helm_charts_updater.helm.config")
-    def test_update_chart_version_skips_when_unchanged(
+    def test_update_chart_version_raises_when_unchanged(
         self, mock_config: MagicMock, sample_chart_yaml: str
     ) -> None:
-        """Test that update is skipped when appVersion is unchanged."""
+        """Test that NoUpdateNeededError is raised when appVersion is unchanged."""
         mock_config.get_clone_path.return_value = "/mock"
         mock_config.get_charts_path.return_value = "charts"
         mock_config.get_chart_name.return_value = "test-chart"
@@ -90,11 +95,10 @@ class TestHelmChartUpdateVersion:
 
         with patch("builtins.open", mock_open(read_data=sample_chart_yaml)):
             helm = HelmChart()
-            with pytest.raises(SystemExit) as exc_info:
+            with pytest.raises(NoUpdateNeededError) as exc_info:
                 helm.update_chart_version()
 
-            # Should exit with 0 (no update needed)
-            assert exc_info.value.code == 0
+            assert "test-chart" in str(exc_info.value)
 
     @patch("helm_charts_updater.helm.config")
     def test_update_chart_version_bumps_version(
