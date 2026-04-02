@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Added
+- Push retry with exponential backoff: up to 3 attempts with pull-rebase on rejected updates
+- End-to-end tests with real git operations against local bare repositories
+
+### Changed
+- Replace `sys.exit()` flow control with domain exceptions (`NoUpdateNeededError`, `ChartValidationError`)
+- Raise `ValueError` instead of `IndexError` when README table markers are missing
+- Capture and log helm-docs stderr on failure instead of silently discarding it
+- Pin all GitHub Actions to commit SHAs for supply-chain security
+- CI workflow renamed to Quality Assurance (`qa.yml`)
+
 ## [0.4.3] - 2025-04-22
 ### Fixed
 - Issue in poetry.lock file
