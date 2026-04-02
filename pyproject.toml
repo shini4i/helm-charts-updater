@@ -47,6 +47,7 @@ addopts = "-v --tb=short"
 markers = [
     "unit: Unit tests",
     "integration: Integration tests",
+    "e2e: End-to-end tests with real git operations",
 ]
 
 [tool.black]
