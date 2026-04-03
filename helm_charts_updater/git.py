@@ -1,6 +1,12 @@
+"""Git repository operations for helm-charts-updater.
+
+This module provides functionality to clone, commit, and push changes
+to a GitHub repository containing Helm charts.
+"""
+
 import logging
-import os
-import sys
+import re
+import time
 from pathlib import Path
 
 from git import GitCommandError
@@ -9,12 +15,50 @@ from pydantic import ValidationError
 from ruamel.yaml import YAML
 
 from helm_charts_updater import config
+from helm_charts_updater.exceptions import ChartValidationError
 from helm_charts_updater.models import Chart
 
 
+def _sanitize_url(url: str) -> str:
+    """Remove credentials from URL for safe logging.
+
+    Args:
+        url: A git URL that may contain embedded credentials.
+
+    Returns:
+        The URL with credentials replaced by '***'.
+    """
+    return re.sub(r"https://[^@]+@", "https://***@", url)
+
+
+# Maximum number of push attempts before giving up on rejected updates
+MAX_PUSH_RETRIES = 3
+
+# Base delay in seconds between push retries (doubles each attempt)
+RETRY_BASE_DELAY = 1.0
+
+
 class GitRepository:
-    def __init__(self):
-        self.repo = self._generate_repo_url()
+    """Manages Git operations for the Helm charts repository.
+
+    Handles cloning, committing, and pushing changes to the charts repository.
+    Includes automatic retry logic with exponential backoff for push conflicts.
+
+    Attributes:
+        clone_path: Local path where the repository is cloned.
+        commit_author: Git commit author name.
+        committer_email: Git commit author email.
+        yaml: YAML parser instance.
+        local_repo: GitPython Repo instance for the cloned repository.
+    """
+
+    def __init__(self) -> None:
+        """Initialize GitRepository by cloning the remote repository.
+
+        Raises:
+            FileExistsError: If the clone path already exists.
+            GitCommandError: If cloning fails.
+        """
         self.clone_path = config.get_clone_path()
 
         self.commit_author = config.get_commit_author()
@@ -27,68 +71,176 @@ class GitRepository:
 
     @staticmethod
     def _generate_repo_url() -> str:
+        """Generate the GitHub repository URL with authentication token.
+
+        Returns:
+            The full repository URL with embedded token.
+        """
         gh_token = config.get_github_token()
         gh_user = config.get_github_user()
         gh_repo = config.get_github_repo()
 
         return f"https://{gh_token}@github.com/{gh_user}/{gh_repo}.git"
 
-    def _clone(self):
-        if not os.path.exists(self.clone_path):
-            logging.info(f"Cloning helm charts repository to {self.clone_path}...")
-            Repo.clone_from(self.repo, self.clone_path)
-            return
-        raise FileExistsError(f"{self.clone_path} already exists, this is unexpected")
+    def _clone(self) -> None:
+        """Clone the helm charts repository to the local path.
 
-    def _commit_changes(self, commit_message):
+        Raises:
+            FileExistsError: If the clone path already exists.
+            GitCommandError: If cloning fails (with sanitized error message).
+        """
+        clone_path = Path(self.clone_path)
+        if not clone_path.exists():
+            repo_url = self._generate_repo_url()
+            logging.info("Cloning helm charts repository to %s...", self.clone_path)
+            try:
+                Repo.clone_from(repo_url, self.clone_path)
+            except GitCommandError as e:
+                sanitized_error = _sanitize_url(str(e))
+                logging.error("Failed to clone repository: %s", sanitized_error)
+                raise GitCommandError(
+                    command="clone",
+                    status=1,
+                    stderr=sanitized_error,
+                ) from None
+            return
+        raise FileExistsError(
+            f"Clone path '{self.clone_path}' already exists. "
+            "Please remove it or use a different clone_path configuration."
+        )
+
+    def _commit_changes(self, commit_message: str) -> None:
+        """Stage and commit all changes with the given message.
+
+        Args:
+            commit_message: The commit message to use.
+        """
         self.local_repo.git.add(A=True)
         self.local_repo.git.config("user.name", self.commit_author)
         self.local_repo.git.config("user.email", self.committer_email)
         self.local_repo.index.commit(commit_message)
 
-    def push_changes(self, chart_version, app_name: str, version: str, old_version: str):
+    def push_changes(
+        self, chart_version: str, app_name: str, version: str, old_version: str | None
+    ) -> None:
+        """Commit and push chart version changes to the remote repository.
+
+        If the push fails due to rejected updates, retries with pull-rebase
+        up to MAX_PUSH_RETRIES times with exponential backoff.
+
+        Args:
+            chart_version: The new chart version.
+            app_name: Name of the application/chart.
+            version: The new application version.
+            old_version: The previous application version, or None if not set.
+
+        Raises:
+            GitCommandError: If push fails after all retries or for
+                non-rejection errors.
+        """
         logging.info("Committing changes...")
+        old_ver_display = old_version if old_version else "N/A"
         commit_message = (
-            f"Bump {app_name} chart to {chart_version}\n" f"appVersion {old_version} → {version}"
+            f"Bump {app_name} chart to {chart_version}\n"
+            f"appVersion {old_ver_display} -> {version}"
         )
 
         self._commit_changes(commit_message)
         origin = self.local_repo.remote(name="origin")
 
-        try:
-            origin.push()
-        except GitCommandError as error:
-            logging.error("Failed to push changes: %s", error)
-            if "Updates were rejected" in str(error):
-                logging.info("Pulling changes with rebase and retrying push...")
-                self.pull_with_rebase()
+        for attempt in range(MAX_PUSH_RETRIES):
+            try:
                 origin.push()
+                return
+            except GitCommandError as error:
+                sanitized_error = _sanitize_url(str(error))
 
-    def pull_with_rebase(self):
-        logging.info("Pulling latest changes from the remote repo with rebase...")
+                if "Updates were rejected" not in str(error):
+                    logging.error("Push failed: %s", sanitized_error)
+                    raise GitCommandError(
+                        command="push", status=1, stderr=sanitized_error
+                    ) from None
+
+                if attempt < MAX_PUSH_RETRIES - 1:
+                    delay = RETRY_BASE_DELAY * (2**attempt)
+                    logging.warning(
+                        "Push rejected (attempt %d/%d), retrying in %.0fs...",
+                        attempt + 1,
+                        MAX_PUSH_RETRIES,
+                        delay,
+                    )
+                    time.sleep(delay)
+                    self.pull_with_rebase()
+                else:
+                    logging.error(
+                        "Push failed after %d attempts: %s",
+                        MAX_PUSH_RETRIES,
+                        sanitized_error,
+                    )
+                    raise GitCommandError(
+                        command="push", status=1, stderr=sanitized_error
+                    ) from None
+
+    def pull_with_rebase(self) -> None:
+        """Pull latest changes from the remote repository with rebase.
+
+        Performs a standard rebase without auto-resolution strategies.
+        If there are conflicts, the rebase will fail and the error is
+        propagated so the caller can handle it.
+
+        Raises:
+            GitCommandError: If the pull with rebase fails (e.g., due to conflicts).
+        """
+        logging.warning("Pulling latest changes with rebase before retrying push...")
         origin = self.local_repo.remote(name="origin")
         try:
             self.local_repo.git.pull(
-                origin, self.local_repo.active_branch.name, strategy_option="ours", rebase=True
+                origin,
+                self.local_repo.active_branch.name,
+                rebase=True,
             )
         except GitCommandError as e:
-            logging.error("Error while pulling with rebase: %s", e)
-            raise GitCommandError
+            sanitized_error = _sanitize_url(str(e))
+            logging.error("Rebase failed (likely a conflict): %s", sanitized_error)
+            raise GitCommandError(
+                command="pull",
+                status=1,
+                stderr=sanitized_error,
+            ) from None
 
-    def get_charts_list(self) -> list:
+    def get_charts_list(self) -> list[Chart]:
+        """Get a list of all top-level Helm charts in the repository.
+
+        Searches within the configured charts_path for Chart.yaml files and
+        filters out vendored dependency charts by checking if 'charts' appears
+        in the relative path (indicating it's inside a dependency charts/ directory).
+
+        Returns:
+            A list of Chart model instances for each discovered chart.
+
+        Raises:
+            ChartValidationError: If a Chart.yaml file fails validation.
+        """
         logging.info("Getting charts list...")
 
-        charts = []
+        charts: list[Chart] = []
+        charts_root = Path(self.clone_path) / config.get_charts_path()
 
-        for chart in Path(self.clone_path).rglob("Chart.yaml"):
-            # We want to avoid including dependencies
-            # in the resulting Charts list
-            if len(str(chart).split("/")) <= 4:
-                with open(chart, "r") as file:
-                    try:
-                        charts.append(Chart(**self.yaml.load(file)))
-                    except ValidationError as err:
-                        logging.error(err)
-                        sys.exit(1)
+        for chart_path in charts_root.rglob("Chart.yaml"):
+            try:
+                rel_path = chart_path.relative_to(charts_root)
+            except ValueError:
+                continue
+
+            # Skip vendored dependency charts: 'charts' in the relative path
+            # indicates a nested dependency (e.g., my-chart/charts/redis/Chart.yaml)
+            if "charts" in rel_path.parts:
+                continue
+
+            with open(chart_path, encoding="utf-8") as file:
+                try:
+                    charts.append(Chart(**self.yaml.load(file)))
+                except ValidationError as err:
+                    raise ChartValidationError(str(chart_path), str(err)) from err
 
         return charts

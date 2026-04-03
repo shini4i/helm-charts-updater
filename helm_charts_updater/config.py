@@ -1,42 +1,166 @@
+"""Configuration management for helm-charts-updater.
+
+This module provides the Config class that handles reading and validating
+configuration from environment variables.
+"""
+
+import re
+
 from environs import Env
+
+# Pattern for valid Helm chart names
+# Must start with alphanumeric and contain only alphanumeric, dashes, and underscores
+CHART_NAME_PATTERN = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9\-_]*$")
 
 
 class Config:
-    def __init__(self):
+    """Configuration manager for the helm-charts-updater.
+
+    Reads configuration from environment variables. All values are prefixed
+    with INPUT_ to match GitHub Actions input conventions.
+
+    Attributes:
+        env: The environs Env instance for reading environment variables.
+    """
+
+    def __init__(self) -> None:
+        """Initialize the Config with an environs Env instance."""
         self.env = Env()
 
-    def get_github_token(self):
-        return self.env("INPUT_GITHUB_TOKEN")
+    def get_github_token(self) -> str:
+        """Get the GitHub authentication token.
 
-    def get_github_user(self):
-        return self.env("INPUT_GH_USER")
+        Returns:
+            The GitHub token for repository access.
 
-    def get_github_repo(self):
-        return self.env("INPUT_GH_REPO")
+        Raises:
+            environs.EnvError: If INPUT_GITHUB_TOKEN is not set.
+        """
+        return self.env.str("INPUT_GITHUB_TOKEN")
 
-    def get_clone_path(self):
-        return self.env("INPUT_CLONE_PATH")
+    def get_github_user(self) -> str:
+        """Get the GitHub username or organization.
 
-    def get_commit_author(self):
-        return self.env("INPUT_COMMIT_AUTHOR")
+        Returns:
+            The GitHub user/org that owns the charts repository.
 
-    def get_commit_email(self):
-        return self.env("INPUT_COMMIT_EMAIL")
+        Raises:
+            environs.EnvError: If INPUT_GH_USER is not set.
+        """
+        return self.env.str("INPUT_GH_USER")
 
-    def get_chart_name(self):
-        return self.env("INPUT_CHART_NAME")
+    def get_github_repo(self) -> str:
+        """Get the GitHub repository name.
 
-    def get_charts_path(self):
-        return self.env("INPUT_CHARTS_PATH")
+        Returns:
+            The name of the charts repository.
 
-    def get_app_version(self):
-        return self.env("INPUT_APP_VERSION")
+        Raises:
+            environs.EnvError: If INPUT_GH_REPO is not set.
+        """
+        return self.env.str("INPUT_GH_REPO")
 
-    def generate_docs(self):
-        return self.env.bool("INPUT_GENERATE_DOCS")
+    def get_clone_path(self) -> str:
+        """Get the local path for cloning the repository.
 
-    def update_readme(self):
-        return self.env.bool("INPUT_UPDATE_README")
+        Returns:
+            The local filesystem path to clone into.
 
-    def update_chart_annotations(self):
-        return self.env.bool("INPUT_UPDATE_CHART_ANNOTATIONS")
+        Raises:
+            environs.EnvError: If INPUT_CLONE_PATH is not set.
+        """
+        return self.env.str("INPUT_CLONE_PATH")
+
+    def get_commit_author(self) -> str:
+        """Get the Git commit author name.
+
+        Returns:
+            The author name to use for commits.
+
+        Raises:
+            environs.EnvError: If INPUT_COMMIT_AUTHOR is not set.
+        """
+        return self.env.str("INPUT_COMMIT_AUTHOR")
+
+    def get_commit_email(self) -> str:
+        """Get the Git commit author email.
+
+        Returns:
+            The email address to use for commits.
+
+        Raises:
+            environs.EnvError: If INPUT_COMMIT_EMAIL is not set.
+        """
+        return self.env.str("INPUT_COMMIT_EMAIL")
+
+    def get_chart_name(self) -> str:
+        """Get and validate the Helm chart name.
+
+        The chart name is validated to prevent command injection attacks.
+        Valid chart names must start with an alphanumeric character and
+        contain only alphanumeric characters, dashes, and underscores.
+
+        Returns:
+            The validated chart name.
+
+        Raises:
+            environs.EnvError: If INPUT_CHART_NAME is not set.
+            ValueError: If the chart name contains invalid characters.
+        """
+        name = self.env.str("INPUT_CHART_NAME")
+        if not CHART_NAME_PATTERN.match(name):
+            raise ValueError(
+                f"Invalid chart name: '{name}'. "
+                "Chart names must start with an alphanumeric character and "
+                "contain only alphanumeric characters, dashes (-), and underscores (_)."
+            )
+        return name
+
+    def get_charts_path(self) -> str:
+        """Get the path to the charts directory within the repository.
+
+        Returns:
+            The relative path to the charts directory.
+
+        Raises:
+            environs.EnvError: If INPUT_CHARTS_PATH is not set.
+        """
+        return self.env.str("INPUT_CHARTS_PATH")
+
+    def get_app_version(self) -> str:
+        """Get the new application version to set.
+
+        Returns:
+            The new appVersion value for the chart.
+
+        Raises:
+            environs.EnvError: If INPUT_APP_VERSION is not set.
+        """
+        return self.env.str("INPUT_APP_VERSION")
+
+    def generate_docs(self) -> bool:
+        """Check if helm-docs should be run to generate documentation.
+
+        Returns:
+            True if helm-docs should be run, False otherwise.
+            Defaults to False when not running under GitHub Actions.
+        """
+        return self.env.bool("INPUT_GENERATE_DOCS", False)
+
+    def update_readme(self) -> bool:
+        """Check if the README should be updated with a charts table.
+
+        Returns:
+            True if README should be updated, False otherwise.
+            Defaults to False when not running under GitHub Actions.
+        """
+        return self.env.bool("INPUT_UPDATE_README", False)
+
+    def update_chart_annotations(self) -> bool:
+        """Check if chart annotations should be updated.
+
+        Returns:
+            True if annotations should be updated, False otherwise.
+            Defaults to False when not running under GitHub Actions.
+        """
+        return self.env.bool("INPUT_UPDATE_CHART_ANNOTATIONS", False)

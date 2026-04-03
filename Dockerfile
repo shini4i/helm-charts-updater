@@ -1,15 +1,38 @@
-FROM python:3-slim-bullseye
+FROM python:3.13-slim-bookworm
 
-ENV HELM_DOCS_VERSION=1.14.2
+ARG HELM_DOCS_VERSION=1.14.2
 
-RUN apt update && apt install curl git -y
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends curl git && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-COPY . .
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+RUN cd /tmp && \
+    curl -fsSL -o helm-docs.tar.gz \
+        "https://github.com/norwoodj/helm-docs/releases/download/v${HELM_DOCS_VERSION}/helm-docs_${HELM_DOCS_VERSION}_Linux_x86_64.tar.gz" && \
+    curl -fsSL -o checksums.txt \
+        "https://github.com/norwoodj/helm-docs/releases/download/v${HELM_DOCS_VERSION}/checksums.txt" && \
+    grep "_Linux_x86_64.tar.gz" checksums.txt | sed 's/helm-docs.*tar.gz/helm-docs.tar.gz/' | sha256sum -c && \
+    tar -xzf helm-docs.tar.gz helm-docs && \
+    mv helm-docs /usr/local/bin/ && \
+    rm -f helm-docs.tar.gz checksums.txt
 
-RUN pip install .
+RUN groupadd --gid 1000 appuser && \
+    useradd --uid 1000 --gid appuser --shell /bin/bash --create-home appuser
 
-RUN curl -L -o helm-docs.deb https://github.com/norwoodj/helm-docs/releases/download/v${HELM_DOCS_VERSION}/helm-docs_${HELM_DOCS_VERSION}_Linux_x86_64.deb \
- && apt install ./helm-docs.deb \
- && rm -f ./helm-docs.deb
+WORKDIR /app
 
-ENTRYPOINT ["python", "/usr/local/bin/helm-charts-updater"]
+COPY pyproject.toml poetry.lock README.md ./
+COPY helm_charts_updater/ ./helm_charts_updater/
+
+RUN pip install --no-cache-dir poetry && \
+    poetry config virtualenvs.create false && \
+    poetry install --only main --no-interaction && \
+    pip uninstall -y poetry && \
+    chmod -R a-w helm_charts_updater/ && \
+    chown -R appuser:appuser .
+
+USER appuser
+
+ENTRYPOINT ["helm-charts-updater"]
