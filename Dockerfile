@@ -1,29 +1,25 @@
 FROM python:3.14-slim-trixie
 
 ARG HELM_DOCS_VERSION=1.14.2
+# Digest of the release above; update both together. Pinning it here is stronger
+# than verifying against the upstream checksums.txt, which an attacker able to
+# replace the archive could replace as well.
+ARG HELM_DOCS_SHA256=a8cf72ada34fad93285ba2a452b38bdc5bd52cc9a571236244ec31022928d6cc
 
 # uv ships as a single static binary; it is removed again once the venv is built
 COPY --from=ghcr.io/astral-sh/uv:0.12.1 /uv /usr/local/bin/uv
 
+ADD --checksum=sha256:${HELM_DOCS_SHA256} \
+    "https://github.com/norwoodj/helm-docs/releases/download/v${HELM_DOCS_VERSION}/helm-docs_${HELM_DOCS_VERSION}_Linux_x86_64.tar.gz" \
+    /tmp/helm-docs.tar.gz
+
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends curl git && \
+    apt-get install -y --no-install-recommends git && \
     apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-WORKDIR /tmp
-# --proto pins the initial request to https; --proto-redir is what stops -L
-# following a redirect down to plaintext, which curl permits by default
-RUN curl -fsSL --proto '=https' --proto-redir '=https' --tlsv1.2 -o helm-docs.tar.gz \
-        "https://github.com/norwoodj/helm-docs/releases/download/v${HELM_DOCS_VERSION}/helm-docs_${HELM_DOCS_VERSION}_Linux_x86_64.tar.gz" && \
-    curl -fsSL --proto '=https' --proto-redir '=https' --tlsv1.2 -o checksums.txt \
-        "https://github.com/norwoodj/helm-docs/releases/download/v${HELM_DOCS_VERSION}/checksums.txt" && \
-    grep "_Linux_x86_64.tar.gz" checksums.txt | sed 's/helm-docs.*tar.gz/helm-docs.tar.gz/' | sha256sum -c && \
-    tar -xzf helm-docs.tar.gz helm-docs && \
-    mv helm-docs /usr/local/bin/ && \
-    rm -f helm-docs.tar.gz checksums.txt
-
-RUN groupadd --gid 1000 appuser && \
+    rm -rf /var/lib/apt/lists/* && \
+    tar -xzf /tmp/helm-docs.tar.gz -C /usr/local/bin helm-docs && \
+    rm -f /tmp/helm-docs.tar.gz && \
+    groupadd --gid 1000 appuser && \
     useradd --uid 1000 --gid appuser --shell /bin/bash --create-home appuser
 
 WORKDIR /app
