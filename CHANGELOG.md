@@ -47,8 +47,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CRLF line endings in README files are now properly preserved during table replacement
 
 ### Security
-- helm-docs is downloaded with `curl --proto '=https' --tlsv1.2`, so a redirect cannot downgrade the transfer
-  to plaintext ahead of the existing checksum verification
+- helm-docs is downloaded with `curl --proto '=https' --proto-redir '=https' --tlsv1.2`. `--proto` alone only
+  pins the initial request; because the download follows redirects, `--proto-redir` is what prevents a redirect
+  to plaintext, which curl allows by default
 
 ## [0.4.3] - 2025-04-22
 ### Fixed

@@ -12,10 +12,11 @@ RUN apt-get update && \
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 WORKDIR /tmp
-# --proto '=https' refuses a redirect that downgrades to plaintext
-RUN curl -fsSL --proto '=https' --tlsv1.2 -o helm-docs.tar.gz \
+# --proto pins the initial request to https; --proto-redir is what stops -L
+# following a redirect down to plaintext, which curl permits by default
+RUN curl -fsSL --proto '=https' --proto-redir '=https' --tlsv1.2 -o helm-docs.tar.gz \
         "https://github.com/norwoodj/helm-docs/releases/download/v${HELM_DOCS_VERSION}/helm-docs_${HELM_DOCS_VERSION}_Linux_x86_64.tar.gz" && \
-    curl -fsSL --proto '=https' --tlsv1.2 -o checksums.txt \
+    curl -fsSL --proto '=https' --proto-redir '=https' --tlsv1.2 -o checksums.txt \
         "https://github.com/norwoodj/helm-docs/releases/download/v${HELM_DOCS_VERSION}/checksums.txt" && \
     grep "_Linux_x86_64.tar.gz" checksums.txt | sed 's/helm-docs.*tar.gz/helm-docs.tar.gz/' | sha256sum -c && \
     tar -xzf helm-docs.tar.gz helm-docs && \

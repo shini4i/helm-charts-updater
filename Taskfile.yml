@@ -21,7 +21,7 @@ tasks:
     desc: Run type checks and pre-commit hooks
     cmds:
       - uv run mypy helm_charts_updater
-      - uv run --no-sync pre-commit run --all-files
+      - uv run --locked --no-sync pre-commit run --all-files
 
   run:
     desc: Run the application, removing the charts it clones afterwards
