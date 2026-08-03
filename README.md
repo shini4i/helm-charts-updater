@@ -4,9 +4,12 @@
 
 A tool that will update helm charts in a given repository
 
-![GitHub last commit (branch)](https://img.shields.io/github/last-commit/shini4i/helm-charts-updater/main?style=plastic)
-![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/shini4i/helm-charts-updater?style=plastic)
-![GitHub](https://img.shields.io/github/license/shini4i/helm-charts-updater?style=plastic)
+[![CI](https://img.shields.io/github/actions/workflow/status/shini4i/helm-charts-updater/qa.yml?branch=main&style=flat-square&logo=githubactions&logoColor=white&label=CI)](https://github.com/shini4i/helm-charts-updater/actions/workflows/qa.yml)
+[![Coverage](https://img.shields.io/codecov/c/github/shini4i/helm-charts-updater/main?style=flat-square&logo=codecov&logoColor=white&label=coverage)](https://codecov.io/gh/shini4i/helm-charts-updater)
+[![Release](https://img.shields.io/github/v/release/shini4i/helm-charts-updater?style=flat-square&logo=github&logoColor=white&label=release)](https://github.com/shini4i/helm-charts-updater/releases/latest)
+[![Python](https://img.shields.io/badge/python-3.14%2B-blue?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
+[![License](https://img.shields.io/github/license/shini4i/helm-charts-updater?style=flat-square&label=license)](LICENSE)
+[![Last commit](https://img.shields.io/github/last-commit/shini4i/helm-charts-updater/main?style=flat-square&label=last%20commit)](https://github.com/shini4i/helm-charts-updater/commits/main)
 
 </div>
 
