@@ -1,6 +1,6 @@
 name: "Helm Charts Updater"
 author: "Vadim Gedz"
-description: "A tool that will update helm charts in a given repository"
+description: "Bump a chart's appVersion and version in a separate Helm charts repository when your app is released"
 branding:
   icon: anchor
   color: gray-dark
