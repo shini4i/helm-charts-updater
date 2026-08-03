@@ -1,7 +1,8 @@
-"""Helm Charts Updater - A tool to update helm charts in a given repository.
+"""Helm Charts Updater - bump a chart in a separate Helm charts repository.
 
-This package provides functionality to automatically update Helm chart
-versions and push changes to a GitHub repository.
+Clones a GitHub repository holding Helm charts, sets the target chart's
+appVersion and bumps its chart version, then commits and pushes the change.
+Optionally regenerates chart docs and the charts table in the repository README.
 """
 
 import logging
