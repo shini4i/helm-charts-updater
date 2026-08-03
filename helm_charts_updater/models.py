@@ -82,7 +82,7 @@ class Chart(BaseModel):
     Attributes:
         apiVersion: The chart API version (v1 or v2).
         name: The name of the chart.
-        description: A single-sentence description of the chart.
+        description: Optional single-sentence description of the chart.
         type: The type of the chart (application or library).
         sources: List of URLs to source code for this project.
         version: The chart version (semver).
@@ -97,7 +97,7 @@ class Chart(BaseModel):
 
     apiVersion: str | None = None
     name: str
-    description: str
+    description: str | None = None
     type: str | None = None
     sources: list[str] | None = None
     version: str

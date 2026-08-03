@@ -1,6 +1,5 @@
 """Tests for the Readme class."""
 
-from pathlib import Path
 from unittest.mock import MagicMock
 from unittest.mock import mock_open
 from unittest.mock import patch
@@ -59,6 +58,15 @@ class TestReadmeGenerateTable:
         assert "chart-a" in table_str
         assert "chart-b" in table_str
         assert "Description A" in table_str
+
+    def test_generate_table_renders_missing_fields_as_blank(self) -> None:
+        """Test that optional fields left unset render as blank cells, not 'None'."""
+        charts = [Chart(name="bare-chart", version="1.0.0")]
+
+        table_str = Readme._generate_table(charts).get_string()
+
+        assert "bare-chart" in table_str
+        assert "None" not in table_str
 
     def test_generate_table_sorts_by_name(self) -> None:
         """Test that table is sorted by chart name."""

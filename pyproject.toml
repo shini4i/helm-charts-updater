@@ -1,42 +1,49 @@
-[tool.poetry]
+[project]
 name = "helm-charts-updater"
 version = "0.4.3"
 description = "A tool that will update helm charts in a given repository"
-authors = ["Vadim Gedz <vadims@linux-tech.io>"]
+authors = [{ name = "Vadim Gedz", email = "vadims@linux-tech.io" }]
 readme = "README.md"
 license = "MIT"
-repository = "https://github.com/shini4i/helm-charts-updater"
+requires-python = ">=3.14,<4"
 keywords = ["helm", "kubernetes", "charts", "automation"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Software Development :: Build Tools",
 ]
+dependencies = [
+    "semver>=3.0.4,<4",
+    "semantic-version>=2.10.0,<3",
+    "GitPython>=3.1.57,<4",
+    "environs>=15.1.0,<16",
+    "pydantic>=2.13.4,<3",
+    "prettytable>=3.18.0,<4",
+    "ruamel-yaml>=0.19.0,<0.20",
+]
 
-[tool.poetry.dependencies]
-python = "^3.13"
-semver = "^3.0.4"
-semantic_version = "^2.10.0"
-GitPython = "^3.1.46"
-environs = "^14.5.0"
-pydantic = "^2.12.0"
-prettytable = "^3.17.0"
-ruamel-yaml = "^0.19.0"
+[project.urls]
+Repository = "https://github.com/shini4i/helm-charts-updater"
 
-[tool.poetry.group.dev.dependencies]
-pytest = "^9.0.0"
-pytest-cov = "^6.0.0"
-pytest-mock = "^3.14.0"
-mypy = "^2.0.0"
+[project.scripts]
+helm-charts-updater = "helm_charts_updater.main:cli"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1,<10",
+    "pytest-cov>=7.1.0,<8",
+    "pytest-mock>=3.15.1,<4",
+    "mypy>=2.3.0,<3",
+]
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["uv_build>=0.11.21,<0.13"]
+build-backend = "uv_build"
 
-[tool.poetry.scripts]
-helm-charts-updater = "helm_charts_updater.main:cli"
+[tool.uv.build-backend]
+# The package lives at the repository root rather than under src/
+module-root = ""
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -59,7 +66,7 @@ force_single_line = true
 line_length = 100
 
 [tool.mypy]
-python_version = "3.13"
+python_version = "3.14"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true

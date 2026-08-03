@@ -10,7 +10,7 @@ from pathlib import Path
 from prettytable import PrettyTable
 from prettytable import TableStyle
 
-from helm_charts_updater import config
+from helm_charts_updater.config import config
 from helm_charts_updater.models import Chart
 
 
@@ -64,10 +64,10 @@ class Readme:
             rows.append(
                 [
                     chart.name,
-                    chart.type,
-                    chart.description,
+                    chart.type or "",
+                    chart.description or "",
                     chart.version,
-                    chart.appVersion,
+                    chart.appVersion or "",
                 ]
             )
 
@@ -117,9 +117,9 @@ class Readme:
         else:
             newline = "\n"
 
-        table_start = marker_end + len(newline) if content_after_marker.startswith(
-            newline
-        ) else marker_end
+        table_start = (
+            marker_end + len(newline) if content_after_marker.startswith(newline) else marker_end
+        )
 
         # Use detected newline to preserve line endings
         table_content = table.get_string().replace("\n", newline)

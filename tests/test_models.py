@@ -136,14 +136,18 @@ class TestChart:
         assert chart.type == "application"
 
     def test_chart_required_fields_only(self) -> None:
-        """Test chart with only required fields."""
+        """Test chart with only the fields Helm requires.
+
+        Helm requires apiVersion, name and version; everything else,
+        description included, is optional.
+        """
         chart = Chart(
             name="minimal-chart",
-            description="Minimal chart",
             version="1.0.0",
         )
         assert chart.name == "minimal-chart"
         assert chart.version == "1.0.0"
+        assert chart.description is None
         assert chart.appVersion is None
         assert chart.type is None
 

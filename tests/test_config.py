@@ -190,9 +190,7 @@ class TestConfig:
     def test_update_chart_annotations_default_when_unset(self) -> None:
         """Test update_chart_annotations returns False by default when env var is not set."""
         # Create a clean environment without INPUT_UPDATE_CHART_ANNOTATIONS
-        clean_env = {
-            k: v for k, v in os.environ.items() if k != "INPUT_UPDATE_CHART_ANNOTATIONS"
-        }
+        clean_env = {k: v for k, v in os.environ.items() if k != "INPUT_UPDATE_CHART_ANNOTATIONS"}
         with patch.dict(os.environ, clean_env, clear=True):
             config = Config()
             assert config.update_chart_annotations() is False

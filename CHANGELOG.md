@@ -10,6 +10,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - End-to-end tests with real git operations against local bare repositories
 
 ### Changed
+- Switched packaging and dependency management from Poetry to uv (`uv.lock` replaces `poetry.lock`)
+- `pyproject.toml` now uses PEP 621 metadata with the `uv_build` backend
+- Dependencies updated, including the majors environs 15 and pytest-cov 7
+- Runtime moved to Python 3.14 on Debian 13 (trixie); `requires-python` is now `>=3.14`
+- Local automation moved from `Makefile` to `Taskfile.yml`
+- Version bumping now uses `bump-my-version` with `.bumpversion.toml`
+- pre-commit hooks updated and now enforced in CI, with `check-yaml` and `check-toml` added
+- Removed the Renovate configuration; dependency, base image, action SHA and pre-commit `rev` updates are
+  now done by hand
+- `description` is now optional in the Chart model, matching the Helm specification
 - Replace `sys.exit()` flow control with domain exceptions (`NoUpdateNeededError`, `ChartValidationError`)
 - Raise `ValueError` instead of `IndexError` when README table markers are missing
 - Capture and log helm-docs stderr on failure instead of silently discarding it
@@ -20,9 +30,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `importValues` in Dependency model now accepts both string and dict entries per the Helm spec
 
 ### Fixed
+- Rejected pushes are now detected: GitPython reports them through `PushInfo` flags rather than by raising, so a
+  push lost to a concurrent commit was previously logged as a success and the chart update silently discarded
+- Updating a chart no longer rewrites the whole Chart.yaml from the model: comments, key order and fields outside
+  the Chart model (`home`, `deprecated`, custom keys) were being dropped on every run
+- `appVersion` is written as a quoted string, so a value such as `1.10` is no longer read back as the number `1.1`
+- Chart.yaml writes preserve the file's quoting, line width, line endings and leading `---` marker, so a version
+  bump no longer produces a whole-file diff — and no longer strips a document-start marker that yamllint requires.
+  One case remains unmatched: in a chart that contains block sequences, nested mapping indentation is re-emitted
+  at ruamel's default of two spaces
 - Malformed YAML and non-mapping Chart.yaml documents now raise `ChartValidationError` instead of untyped exceptions
 - Credential sanitization in re-raised exceptions now uses `from None` to prevent leakage via implicit exception chaining
-- Docker image now installs from `poetry.lock` for reproducible builds
+- Docker image now installs from `uv.lock` for reproducible builds
 - CRLF line endings in README files are now properly preserved during table replacement
 
 ## [0.4.3] - 2025-04-22

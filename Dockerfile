@@ -1,6 +1,9 @@
-FROM python:3.13-slim-bookworm
+FROM python:3.14-slim-trixie
 
 ARG HELM_DOCS_VERSION=1.14.2
+
+# uv ships as a single static binary; it is removed again once the venv is built
+COPY --from=ghcr.io/astral-sh/uv:0.12.1 /uv /usr/local/bin/uv
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends curl git && \
@@ -23,15 +26,23 @@ RUN groupadd --gid 1000 appuser && \
 
 WORKDIR /app
 
-COPY pyproject.toml poetry.lock README.md ./
+COPY pyproject.toml uv.lock README.md ./
 COPY helm_charts_updater/ ./helm_charts_updater/
 
-RUN pip install --no-cache-dir poetry && \
-    poetry config virtualenvs.create false && \
-    poetry install --only main --no-interaction && \
-    pip uninstall -y poetry && \
-    chmod -R a-w helm_charts_updater/ && \
-    chown -R appuser:appuser .
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    UV_PYTHON_DOWNLOADS=0
+
+RUN uv sync --locked --no-dev --no-editable && \
+    rm /usr/local/bin/uv
+
+# /app stays root-owned — the app never writes to its own code — so standalone
+# runs clone into a directory the runtime user owns. As a GitHub Action this
+# WORKDIR is overridden: the runner mounts its workspace and runs from
+# /github/workspace.
+ENV PATH="/app/.venv/bin:$PATH"
+RUN mkdir -p /workspace && chown appuser:appuser /workspace
+WORKDIR /workspace
 
 USER appuser
 
