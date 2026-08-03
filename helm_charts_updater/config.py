@@ -164,3 +164,7 @@ class Config:
             Defaults to False when not running under GitHub Actions.
         """
         return self.env.bool("INPUT_UPDATE_CHART_ANNOTATIONS", False)
+
+
+# The shared configuration instance used across the application
+config = Config()

@@ -1,8 +1,8 @@
 """Shared pytest fixtures for helm-charts-updater tests."""
 
 import os
-from pathlib import Path
 from collections.abc import Generator
+from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock
 from unittest.mock import patch

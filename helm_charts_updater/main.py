@@ -7,7 +7,7 @@ update workflow.
 import logging
 import sys
 
-from helm_charts_updater import config
+from helm_charts_updater.config import config
 from helm_charts_updater.exceptions import ChartValidationError
 from helm_charts_updater.exceptions import NoUpdateNeededError
 from helm_charts_updater.git import GitRepository

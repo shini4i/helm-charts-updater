@@ -1,0 +1,40 @@
+version: '3'
+
+tasks:
+  default:
+    desc: List available tasks
+    cmds:
+      - task --list
+    silent: true
+
+  install:
+    desc: Install dependencies into the local virtualenv
+    cmds:
+      - uv sync
+
+  test:
+    desc: Run the test suite with coverage
+    cmds:
+      - uv run pytest --cov=helm_charts_updater --cov-report=term-missing
+
+  lint:
+    desc: Run type checks and pre-commit hooks
+    cmds:
+      - uv run mypy helm_charts_updater
+      - uv run --locked --no-sync pre-commit run --all-files
+
+  run:
+    desc: Run the application, removing the charts it clones afterwards
+    cmds:
+      - defer: rm -rf charts
+      - uv run helm-charts-updater
+
+  bump-patch:
+    desc: Bump the patch version
+    cmds:
+      - uvx bump-my-version bump patch --allow-dirty
+
+  bump-minor:
+    desc: Bump the minor version
+    cmds:
+      - uvx bump-my-version bump minor --allow-dirty

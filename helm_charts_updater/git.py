@@ -10,11 +10,13 @@ import time
 from pathlib import Path
 
 from git import GitCommandError
+from git import PushInfo
 from git import Repo
+from git.remote import PushInfoList
 from pydantic import ValidationError
 from ruamel.yaml import YAML
 
-from helm_charts_updater import config
+from helm_charts_updater.config import config
 from helm_charts_updater.exceptions import ChartValidationError
 from helm_charts_updater.models import Chart
 
@@ -36,6 +38,44 @@ MAX_PUSH_RETRIES = 3
 
 # Base delay in seconds between push retries (doubles each attempt)
 RETRY_BASE_DELAY = 1.0
+
+# The one push failure a pull --rebase can resolve: the remote branch moved ahead
+# of us. REMOTE_REJECTED is deliberately excluded — a branch protection rule or a
+# pre-receive hook declines the same commit however often it is rebased.
+RETRYABLE_PUSH_FLAGS = PushInfo.REJECTED
+
+
+def _push_failure_summary(push_infos: PushInfoList) -> str | None:
+    """Summarize the refs a push failed to update.
+
+    GitPython does not raise when the remote rejects a push — it reports the
+    outcome per ref through PushInfo flags and records a failed git invocation
+    on the list's `error` attribute. Both are reported, because a rejection
+    normally sets both and each carries detail the other lacks: the per-ref
+    summary says why, the error says what git printed. An empty list means git
+    named no refs at all, which is treated as a failure defensively.
+
+    Args:
+        push_infos: The result of Remote.push().
+
+    Returns:
+        A human-readable summary of the failure, or None if every ref was
+        updated successfully.
+    """
+    if not push_infos:
+        return "the remote reported no updated refs"
+
+    parts = [
+        f"{info.remote_ref_string}: {info.summary.strip()}"
+        for info in push_infos
+        if info.flags & PushInfo.ERROR
+    ]
+
+    error = getattr(push_infos, "error", None)
+    if error is not None:
+        parts.append(str(error))
+
+    return "; ".join(parts) if parts else None
 
 
 class GitRepository:
@@ -125,8 +165,8 @@ class GitRepository:
     ) -> None:
         """Commit and push chart version changes to the remote repository.
 
-        If the push fails due to rejected updates, retries with pull-rebase
-        up to MAX_PUSH_RETRIES times with exponential backoff.
+        If the remote rejects the push because it moved ahead, retries with
+        pull-rebase up to MAX_PUSH_RETRIES times with exponential backoff.
 
         Args:
             chart_version: The new chart version.
@@ -150,36 +190,40 @@ class GitRepository:
 
         for attempt in range(MAX_PUSH_RETRIES):
             try:
-                origin.push()
-                return
+                push_infos = origin.push()
             except GitCommandError as error:
                 sanitized_error = _sanitize_url(str(error))
+                logging.error("Push failed: %s", sanitized_error)
+                raise GitCommandError(command="push", status=1, stderr=sanitized_error) from None
 
-                if "Updates were rejected" not in str(error):
-                    logging.error("Push failed: %s", sanitized_error)
-                    raise GitCommandError(
-                        command="push", status=1, stderr=sanitized_error
-                    ) from None
+            failure = _push_failure_summary(push_infos)
+            if failure is None:
+                return
 
-                if attempt < MAX_PUSH_RETRIES - 1:
-                    delay = RETRY_BASE_DELAY * (2**attempt)
-                    logging.warning(
-                        "Push rejected (attempt %d/%d), retrying in %.0fs...",
-                        attempt + 1,
-                        MAX_PUSH_RETRIES,
-                        delay,
-                    )
-                    time.sleep(delay)
-                    self.pull_with_rebase()
-                else:
-                    logging.error(
-                        "Push failed after %d attempts: %s",
-                        MAX_PUSH_RETRIES,
-                        sanitized_error,
-                    )
-                    raise GitCommandError(
-                        command="push", status=1, stderr=sanitized_error
-                    ) from None
+            sanitized_failure = _sanitize_url(failure)
+            retryable = any(info.flags & RETRYABLE_PUSH_FLAGS for info in push_infos)
+
+            if not retryable:
+                logging.error("Push failed: %s", sanitized_failure)
+                raise GitCommandError(command="push", status=1, stderr=sanitized_failure) from None
+
+            if attempt == MAX_PUSH_RETRIES - 1:
+                logging.error(
+                    "Push failed after %d attempts: %s",
+                    MAX_PUSH_RETRIES,
+                    sanitized_failure,
+                )
+                raise GitCommandError(command="push", status=1, stderr=sanitized_failure) from None
+
+            delay = RETRY_BASE_DELAY * (2**attempt)
+            logging.warning(
+                "Push rejected (attempt %d/%d), retrying in %.0fs...",
+                attempt + 1,
+                MAX_PUSH_RETRIES,
+                delay,
+            )
+            time.sleep(delay)
+            self.pull_with_rebase()
 
     def pull_with_rebase(self) -> None:
         """Pull latest changes from the remote repository with rebase.

@@ -10,6 +10,7 @@ import shutil
 from collections.abc import Generator
 from pathlib import Path
 from typing import Any
+from unittest.mock import MagicMock
 from unittest.mock import patch
 
 import pytest
@@ -17,6 +18,8 @@ from git import Repo
 from ruamel.yaml import YAML
 
 from helm_charts_updater.exceptions import ChartValidationError
+from helm_charts_updater.git import GitRepository
+from helm_charts_updater.helm import HelmChart
 from helm_charts_updater.main import main
 
 CHART_YAML_CONTENT = """\
@@ -148,6 +151,29 @@ def _clone_and_read_chart(bare_repo: Path, dest: Path) -> dict[str, Any]:
         return yaml.load(f)
 
 
+def _push_unrelated_commit(bare_repo: Path, tmp_path: Path) -> None:
+    """Push a commit to the bare repo from a separate clone.
+
+    Simulates another pipeline pushing to the charts repository while our
+    working clone is mid-update, which leaves our clone behind the remote.
+
+    Args:
+        bare_repo: Path to the bare git repository.
+        tmp_path: Pytest temporary directory to hold the throwaway clone.
+    """
+    other_path = tmp_path / "concurrent-clone"
+    repo = Repo.clone_from(f"file://{bare_repo}", str(other_path))
+
+    (other_path / "UNRELATED.md").write_text("Concurrent change\n")
+    repo.git.add(A=True)
+    repo.git.config("user.name", "Concurrent")
+    repo.git.config("user.email", "concurrent@test.com")
+    repo.index.commit("Concurrent change")
+    repo.remote("origin").push()
+
+    shutil.rmtree(other_path)
+
+
 @pytest.mark.e2e
 class TestE2EWorkflow:
     """End-to-end tests exercising the full main() workflow."""
@@ -215,6 +241,39 @@ class TestE2EWorkflow:
         commits = list(repo.iter_commits())
         assert len(commits) == 1
         assert commits[0].message.startswith("Initial chart content")
+
+    @patch("helm_charts_updater.git.time.sleep")
+    def test_push_recovers_from_concurrent_remote_commit(
+        self,
+        mock_sleep: MagicMock,  # noqa: ARG002
+        e2e_env: dict[str, Any],
+        tmp_path: Path,
+    ) -> None:
+        """Test that a push rejected by a concurrent commit is rebased and retried.
+
+        Reproduces the real race: the remote gains a commit after we clone, so
+        our first push is rejected. The update must still reach the remote.
+        """
+        repo = GitRepository()
+        chart = HelmChart()
+        chart_version, old_version = chart.update_chart_version()
+
+        _push_unrelated_commit(e2e_env["bare_repo"], tmp_path)
+
+        repo.push_changes(
+            chart_version=chart_version,
+            app_name=chart.chart_name,
+            version=chart.app_version,
+            old_version=old_version,
+        )
+
+        verify_path = tmp_path / "verify-concurrent"
+        chart_data = _clone_and_read_chart(e2e_env["bare_repo"], verify_path)
+
+        assert chart_data["version"] == "1.0.1"
+        assert chart_data["appVersion"] == "2.0.0"
+        # The concurrent commit must survive the rebase
+        assert (verify_path / "UNRELATED.md").exists()
 
     def test_invalid_chart_yaml(self, tmp_path: Path) -> None:
         """Test that invalid Chart.yaml raises ChartValidationError."""

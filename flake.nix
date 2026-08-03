@@ -15,24 +15,25 @@
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
             # Python environment
-            python313
-            poetry
+            python314
+            uv
 
             # Required by the application
             helm-docs
             git
 
             # Development tools
-            mypy
+            go-task
+            pre-commit
           ];
 
           shellHook = ''
             echo "helm-charts-updater development environment"
             echo "Python: $(python --version)"
-            echo "Poetry: $(poetry --version)"
+            echo "uv: $(uv --version)"
             echo "helm-docs: $(helm-docs --version)"
             echo ""
-            echo "Run 'poetry install' to install dependencies"
+            echo "Run 'uv sync' to install dependencies"
           '';
         };
       }
