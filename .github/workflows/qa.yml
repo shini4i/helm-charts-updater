@@ -27,7 +27,7 @@ jobs:
         run: uv sync --locked
 
       - name: Run tests with coverage
-        run: uv run pytest --cov=helm_charts_updater --cov-report=xml --cov-report=term-missing
+        run: uv run --no-sync pytest --cov=helm_charts_updater --cov-report=xml --cov-report=term-missing
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
@@ -51,10 +51,10 @@ jobs:
         run: uv sync --locked
 
       - name: Run mypy
-        run: uv run mypy helm_charts_updater
+        run: uv run --no-sync mypy helm_charts_updater
 
       - name: Run pre-commit hooks
-        run: uvx pre-commit run --all-files --show-diff-on-failure
+        run: uv run --no-sync pre-commit run --all-files --show-diff-on-failure
 
   docker:
     runs-on: ubuntu-latest

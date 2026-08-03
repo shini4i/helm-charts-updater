@@ -16,7 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Runtime moved to Python 3.14 on Debian 13 (trixie); `requires-python` is now `>=3.14`
 - Local automation moved from `Makefile` to `Taskfile.yml`
 - Version bumping now uses `bump-my-version` with `.bumpversion.toml`
-- pre-commit hooks updated and now enforced in CI, with `check-yaml` and `check-toml` added
+- pre-commit hooks updated and now enforced in CI, with `check-yaml` and `check-toml` added; pre-commit is a
+  locked dev dependency, and CI runs tools with `uv run --no-sync` so they come from `uv.lock` rather than a
+  fresh resolution
 - Removed the Renovate configuration; dependency, base image, action SHA and pre-commit `rev` updates are
   now done by hand
 - `description` is now optional in the Chart model, matching the Helm specification
@@ -43,6 +45,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Credential sanitization in re-raised exceptions now uses `from None` to prevent leakage via implicit exception chaining
 - Docker image now installs from `uv.lock` for reproducible builds
 - CRLF line endings in README files are now properly preserved during table replacement
+
+### Security
+- helm-docs is downloaded with `curl --proto '=https' --tlsv1.2`, so a redirect cannot downgrade the transfer
+  to plaintext ahead of the existing checksum verification
 
 ## [0.4.3] - 2025-04-22
 ### Fixed

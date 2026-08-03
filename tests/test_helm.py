@@ -340,6 +340,59 @@ class TestHelmChartWritePreservesDocument:
         assert chart_yaml.read_text().startswith("---\n")
 
     @patch("helm_charts_updater.helm.config")
+    def test_update_preserves_document_start_after_leading_comment(
+        self, mock_config: MagicMock, tmp_path: Path
+    ) -> None:
+        """Test that a `---` marker is kept when comments precede it.
+
+        YAML permits comments before the document start, so the marker is not
+        necessarily the first characters in the file.
+        """
+        mock_config.get_clone_path.return_value = str(tmp_path)
+        mock_config.get_charts_path.return_value = "charts"
+        mock_config.get_chart_name.return_value = "test-chart"
+        mock_config.get_app_version.return_value = "2.0.0"
+        mock_config.update_chart_annotations.return_value = False
+
+        original = (
+            "# Managed by automation\n"
+            "---\n"
+            "apiVersion: v2\n"
+            "name: test-chart\n"
+            "version: 1.0.0\n"
+            'appVersion: "1.0.0"\n'
+        )
+        chart_yaml = self._write_chart(tmp_path, original)
+
+        HelmChart().update_chart_version()
+
+        assert "---\n" in chart_yaml.read_text()
+
+    @patch("helm_charts_updater.helm.config")
+    def test_update_adds_no_document_start_when_absent(
+        self, mock_config: MagicMock, tmp_path: Path
+    ) -> None:
+        """Test that a chart without a `---` marker does not gain one."""
+        mock_config.get_clone_path.return_value = str(tmp_path)
+        mock_config.get_charts_path.return_value = "charts"
+        mock_config.get_chart_name.return_value = "test-chart"
+        mock_config.get_app_version.return_value = "2.0.0"
+        mock_config.update_chart_annotations.return_value = False
+
+        original = (
+            "# A comment, but no document start\n"
+            "apiVersion: v2\n"
+            "name: test-chart\n"
+            "version: 1.0.0\n"
+            'appVersion: "1.0.0"\n'
+        )
+        chart_yaml = self._write_chart(tmp_path, original)
+
+        HelmChart().update_chart_version()
+
+        assert not chart_yaml.read_text().startswith("---")
+
+    @patch("helm_charts_updater.helm.config")
     def test_update_preserves_nested_mapping_indentation(
         self, mock_config: MagicMock, tmp_path: Path
     ) -> None:

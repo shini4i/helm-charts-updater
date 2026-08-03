@@ -23,6 +23,26 @@ from helm_charts_updater.exceptions import NoUpdateNeededError
 from helm_charts_updater.models import Chart
 
 
+def _has_document_start(content: str) -> bool:
+    """Check whether a YAML document opens with an explicit `---` marker.
+
+    YAML allows comments and blank lines before the marker, so the first
+    non-blank, non-comment line is the one that decides.
+
+    Args:
+        content: The raw text of the YAML file.
+
+    Returns:
+        True if the document declares an explicit start.
+    """
+    for line in content.splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        return stripped == "---" or stripped.startswith("--- ")
+    return False
+
+
 class HelmChart:
     """Manages Helm chart version updates.
 
@@ -87,7 +107,7 @@ class HelmChart:
 
         self.newline = "\r\n" if "\r\n" in chart_content else "\n"
         # Charts linted with yamllint's default rules require the marker
-        self.yaml.explicit_start = chart_content.lstrip().startswith("---")
+        self.yaml.explicit_start = _has_document_start(chart_content)
 
         try:
             document, sequence_indent, offset = load_yaml_guess_indent(
