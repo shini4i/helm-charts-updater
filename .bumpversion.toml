@@ -12,3 +12,14 @@ replace = 'version = "{new_version}"'
 filename = "CHANGELOG.md"
 search = "## [Unreleased]"
 replace = "## [{new_version}] - {now:%Y-%m-%d}"
+
+# uv.lock records the project's own version; uv sync --locked fails in CI and in
+# the Docker build if it drifts from pyproject.toml
+[[tool.bumpversion.files]]
+filename = "uv.lock"
+search = """
+name = "helm-charts-updater"
+version = "{current_version}\""""
+replace = """
+name = "helm-charts-updater"
+version = "{new_version}\""""
