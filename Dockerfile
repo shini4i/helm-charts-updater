@@ -18,9 +18,7 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
     tar -xzf /tmp/helm-docs.tar.gz -C /usr/local/bin helm-docs && \
-    rm -f /tmp/helm-docs.tar.gz && \
-    groupadd --gid 1000 appuser && \
-    useradd --uid 1000 --gid appuser --shell /bin/bash --create-home appuser
+    rm -f /tmp/helm-docs.tar.gz
 
 WORKDIR /app
 
@@ -34,14 +32,12 @@ ENV UV_COMPILE_BYTECODE=1 \
 RUN uv sync --locked --no-dev --no-editable && \
     rm /usr/local/bin/uv
 
-# /app stays root-owned — the app never writes to its own code — so standalone
-# runs clone into a directory the runtime user owns. As a GitHub Action this
-# WORKDIR is overridden: the runner mounts its workspace and runs from
-# /github/workspace.
 ENV PATH="/app/.venv/bin:$PATH"
-RUN mkdir -p /workspace && chown appuser:appuser /workspace
-WORKDIR /workspace
 
-USER appuser
+# No USER: GITHUB_WORKSPACE is mounted runner-owned, so a non-root user cannot
+# create the clone directory in it.
+# https://docs.github.com/actions/reference/workflows-and-actions/dockerfile-support#user
+RUN mkdir -p /workspace
+WORKDIR /workspace
 
 ENTRYPOINT ["helm-charts-updater"]
