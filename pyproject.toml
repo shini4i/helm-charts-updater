@@ -1,6 +1,6 @@
 [project]
 name = "helm-charts-updater"
-version = "0.5.0"
+version = "0.5.1"
 description = "Bump a chart's appVersion and version in a separate Helm charts repository when your app is released"
 authors = [{ name = "Vadim Gedz", email = "vadims@linux-tech.io" }]
 readme = "README.md"

@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.5.1] - 2026-09-07
 ### Fixed
 - `uv.lock` now records the project version, so a release commit no longer breaks `uv sync --locked` in CI and in the
   Docker build; `.bumpversion.toml` keeps the lock in step with `pyproject.toml`
