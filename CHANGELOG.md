@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.5.2] - 2026-09-07
 ### Fixed
 - The image no longer sets a non-root `USER`, which made every Action run fail to create its clone directory:
   GitHub mounts `GITHUB_WORKSPACE` owned by the runner user, and Docker actions must run as root
