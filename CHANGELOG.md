@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Switched packaging and dependency management from Poetry to uv (`uv.lock` replaces `poetry.lock`)
 - `pyproject.toml` now uses PEP 621 metadata with the `uv_build` backend
-- Dependencies updated, including the majors environs 15 and pytest-cov 7
+- Dependencies updated, including the majors environs 15, pytest 9, pytest-cov 7 and mypy 2
 - Runtime moved to Python 3.14 on Debian 13 (trixie); `requires-python` is now `>=3.14`
 - Local automation moved from `Makefile` to `Taskfile.yml`
 - Version bumping now uses `bump-my-version` with `.bumpversion.toml`
@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rebase on push-retry no longer auto-resolves conflicts with the `ours` strategy; conflicts now propagate as errors
 - Chart discovery (`get_charts_list`) now searches within `charts_path` instead of the full clone root
 - `importValues` in Dependency model now accepts both string and dict entries per the Helm spec
+- README now explains the update flow with a diagram and carries CI, coverage and Python version badges
 
 ### Fixed
 - Rejected pushes are now detected: GitPython reports them through `PushInfo` flags rather than by raising, so a
@@ -51,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with `curl` verified against the upstream `checksums.txt`. The pin cannot be swapped by whoever can replace
   the archive, and `curl` is no longer installed in the image at all. The digest must be updated alongside
   `HELM_DOCS_VERSION`
+- GitPython (3.1.57) and pytest (9.1.1) updated to clear published security advisories
 
 ## [0.4.3] - 2025-04-22
 ### Fixed
